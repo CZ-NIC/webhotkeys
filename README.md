@@ -3,7 +3,7 @@
 Easy solution to integrate keyboard hotkeys into the webpage.
 
 ```javascript
-<script src="https://cdn.jsdelivr.net/gh/e3rd/WebHotkeys@0.9.2/WebHotkeys.js?register"></script>
+<script src="https://cdn.jsdelivr.net/gh/e3rd/WebHotkeys@0.9.4/WebHotkeys.js?register"></script>
 ```
 
 # Usage
@@ -66,7 +66,7 @@ The constructors accepts the following options object.
 
 | Property             | Type    | Default | Description                                                                       |
 |----------------------|---------|---------|-----------------------------------------------------------------------------------|
-| hint                 | `'title'|'text'|false` | `title` | Append shorcut text to the element title (ex: 'anchor (Alt+1)') or its text (or its label for the case of a form element). |
+| hint                 | `'title'\|'text'\|false` | `title` | Append shorcut text to the element title (ex: 'anchor (Alt+1)') or its text (or its label for the case of a form element). |
 | grabF1               | boolean | true | Put basic help text under F1                                                     |
 | replaceAccesskeys    | boolean | true | If true, [accesskey] elements will be converted to hotkeys.                      |
 | observe              | boolean | true | Monitors DOM changes. Automatically un/grab hotkeys as DOM elements with the given selector dis/appear. |
@@ -229,6 +229,3 @@ wh\.press\( wh.grab(
 wh\.pressAlt\(" wh.grab("Alt+
 removed get_info_pairs()
 ```
-
-# LICENSE
-GNU GPLv3.

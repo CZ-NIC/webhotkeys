@@ -141,6 +141,9 @@ class Hotkey {
         this._notify()
         return this
     }
+    /**
+     * @param {?boolean} enable
+     */
     toggle(enable = null) {
         enable === null && !this.enabled || enable ? this.enable() : this.disable()
         return this
@@ -163,6 +166,9 @@ class HotkeyGroup extends Array {
     disable() {
         return this.toggle(false)
     }
+    /**
+     * @param {?boolean} enable
+     */
     toggle(enable = null) {
         this.forEach(hotkey => hotkey.toggle(enable))
         return this
@@ -650,7 +656,7 @@ class _List {
 
     /**
      * Get current this matching the selector. (Even if it changed since ex: last go call due to another user activity on page.)
-     * @return {null|HtmlElement|*}
+     * @return {null|HTMLElement|*}
      */
     getCurrent() {
         this._loadSiblings()
@@ -668,7 +674,7 @@ class _List {
     /**
      *
      * @param {boolean} forward
-     * @param {int} steps
+     * @param {number} steps
      * @returns {boolean}
      */
     go(forward = true, steps = 1) {
