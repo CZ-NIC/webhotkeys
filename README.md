@@ -110,11 +110,11 @@ Start listening to a hotkey. Specify hint and callback to be triggered on hit. R
 
     If you define both `code` and `key`, the `code` takes precedence, and then the last one defined takes precedence.
 
-    If multiple hotkeys are defined, only the last one defined is executed (unless it returns `false`, in which case the next one is tried). We skip hotkeys that are not in the correct scope or whoise underlying element is disabled.
+    Handling conflicts: If multiple hotkeys are defined, only the last one defined is executed (unless it returns `false`, in which case the next one is tried). We skip hotkeys that are not in the correct scope or whose underlying element is disabled.
 
     Possible modifiers are: `Alt`, `Shift`, `Ctrl` (`Control`).
 
-    "We attempt to determine whether the hotkey should not be triggered. Such as triggering hotkeys like `a` or `Delete` in an `<input>` contents, which makes no sense, but `F2` does.
+    We try to determine whether a hotkey should not be triggered—for example, when pressing keys like `a` or `Delete` inside an `<input>` field, which wouldn't make sense. However, keys like `F2` still do.
 
     Some special hotkeys like `Ctrl+PageDown` will likely never be passed to the webpage and therefore do not function.
 * `hintOrAction` (`string|HTMLElement|Function`): Either hint text or an action (if the action parameter stays undefined).
@@ -223,8 +223,9 @@ Enable or disable all hotkeys in the group. Accepts parameter `enable = null` to
 (Remove the paragraph.)
 
 ```
+KEY\.N(\d), "Digit\L$1",
 KEY\.([A-Z]\w+), "\L$1",
-KEY\.([A-Z]), $1
+KEY\.([A-Z]), "\L$1"
 wh\.press\( wh.grab(
 wh\.pressAlt\(" wh.grab("Alt+
 removed get_info_pairs()
