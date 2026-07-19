@@ -62,7 +62,14 @@ class Hotkey {
                 this.hint = el.title || el.innerText.substring(0, 50)
             }
             const opt = wh.options
-            if (opt.hint && !el.webhotkeys_displayed) {
+            const clue = this.getClue()
+            // Stores *which* hotkey's clue was last hinted (not just a boolean), as a
+            // data-* attribute so it survives el.cloneNode()/$.clone(). A clone kept
+            // with the SAME hotkey (ex: zoom.js's `replace()` re-clones #nav-Close with
+            // "Alt+z" on every zoom_refresh()) must not be re-hinted; but a clone given
+            // a DIFFERENT hotkey (ex: free-text.js clones the submit button 3x, each
+            // with its own Alt+Shift+… hotkey) still needs its own hint appended.
+            if (opt.hint && el.dataset.webhotkeysDisplayed !== clue) {
                 const hint = this.getClue(true)
                 if (opt.hint === "title") {
                     el.title += hint
@@ -76,7 +83,7 @@ class Hotkey {
                         el.innerHTML += hint
                     }
                 }
-                el.webhotkeys_displayed = true // prevent from being written twice
+                el.dataset.webhotkeysDisplayed = clue
             }
         }
     }
@@ -136,7 +143,10 @@ class Hotkey {
         return this
     }
     disable() {
-        this.registry.splice(this.registry.indexOf(this), 1)
+        const index = this.registry.indexOf(this)
+        if (index > -1) { // when already disabled, splice(-1, 1) would remove a foreign hotkey sharing the combination
+            this.registry.splice(index, 1)
+        }
         this.enabled = false
         this._notify()
         return this
