@@ -197,12 +197,16 @@ class WebHotkeys {
         /** @type {WebHotkeysDefaults} */
         options = this.options = { ...WebHotkeysDefaults, ...options }
         /**  @type {Object.<KeyState, Hotkey[]>} */
-        this._hotkeys = {}
+        this._hotkeys = Object.create(null)
         /** @type {WeakMap.<HTMLElement, Hotkey>} Links DOM elements to its shorcuts. */
         this._dom = new WeakMap()
 
+        // Object.create(null) (not {}) because the group name is an arbitrary string coming from
+        // [data-hotkey-group] in the DOM. A group named e.g. "constructor" or "__proto__" would otherwise
+        // collide with an inherited property, returning a builtin instead of a HotkeyGroup (crashing on
+        // .push()) or clobbering the registry's own prototype.
         /**  @type {Object.<string, Hotkey[]>} */
-        this._groups = {}
+        this._groups = Object.create(null)
 
         //
         // Helper methods

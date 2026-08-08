@@ -3,7 +3,7 @@
 Easy solution to integrate keyboard hotkeys into the webpage.
 
 ```javascript
-<script src="https://cdn.jsdelivr.net/gh/e3rd/WebHotkeys@0.9.4/WebHotkeys.js?register"></script>
+<script src="https://cdn.jsdelivr.net/gh/e3rd/WebHotkeys@0.9.6/WebHotkeys.js?register"></script>
 ```
 
 # Usage
