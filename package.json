@@ -45,10 +45,13 @@
     "test": "for f in test/*.test.js; do node \"$f\" || exit 1; done; node test/esm-import.test.mjs",
     "test:min": "WH_FILE=WebHotkeys.min.js npm test",
     "build": "node scripts/build.js",
+    "lint": "eslint .",
     "version": "npm run build && npm run test:min && git add README.md WebHotkeys.min.js",
     "prepublishOnly": "npm test && npm run build"
   },
   "devDependencies": {
-    "esbuild": "0.28.2"
+    "esbuild": "0.28.2",
+    "eslint": "^10.9.0",
+    "globals": "^17.11.0"
   }
 }

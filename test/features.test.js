@@ -74,7 +74,7 @@ function testAsync(name, fn) {
     })
 }
 
-const { WebHotkeys, Hotkey, sandbox, listeners, FakeHTMLElement } = loadWebHotkeys()
+const { WebHotkeys, sandbox, listeners, FakeHTMLElement } = loadWebHotkeys()
 // remap: false by default, otherwise every instance would pick up what a previous test stored
 const OPTS = { grabF1: false, observe: false, replaceAccesskeys: false, mac: false, remap: false }
 const fresh = (extra = {}) => new WebHotkeys({ ...OPTS, ...extra })
