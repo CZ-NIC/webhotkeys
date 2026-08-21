@@ -1,0 +1,54 @@
+{
+  "name": "webhotkeys",
+  "version": "0.10.0",
+  "description": "Easy solution to integrate keyboard hotkeys into the webpage.",
+  "main": "WebHotkeys.js",
+  "files": [
+    "WebHotkeys.js",
+    "WebHotkeys.min.js",
+    "WebHotkeys.mjs",
+    "index.d.ts"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CZ-NIC/webhotkeys.git"
+  },
+  "keywords": [
+    "hotkeys",
+    "keyboard",
+    "shortcuts",
+    "accesskey",
+    "keybindings",
+    "key-sequence",
+    "vanilla-js"
+  ],
+  "author": "Edvard Rejthar",
+  "license": "LGPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/CZ-NIC/webhotkeys/issues"
+  },
+  "homepage": "https://github.com/CZ-NIC/webhotkeys#readme",
+  "module": "WebHotkeys.mjs",
+  "types": "index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./WebHotkeys.mjs",
+      "require": "./WebHotkeys.js",
+      "default": "./WebHotkeys.js"
+    },
+    "./WebHotkeys.js": "./WebHotkeys.js",
+    "./package.json": "./package.json"
+  },
+  "sideEffects": false,
+  "scripts": {
+    "test": "for f in test/*.test.js; do node \"$f\" || exit 1; done; node test/esm-import.test.mjs",
+    "test:min": "WH_FILE=WebHotkeys.min.js npm test",
+    "build": "node scripts/build.js",
+    "version": "npm run build && npm run test:min && git add README.md WebHotkeys.min.js",
+    "prepublishOnly": "npm test && npm run build"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  }
+}

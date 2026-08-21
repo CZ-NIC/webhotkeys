@@ -1,0 +1,47 @@
+name: Release
+
+# Pushing a bare version tag (0.10.0 - no "v", see .npmrc) publishes to npm.
+# The jsDelivr CDN needs nothing, it serves that git tag by itself.
+on:
+  push:
+    tags: ["[0-9]+.[0-9]+.[0-9]+"]
+
+permissions:
+  contents: read
+  id-token: write # npm Trusted Publishing (OIDC) - no NPM_TOKEN secret needed
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      # Trusted Publishing needs npm >= 11.5.1, newer than the one bundled with Node 22.
+      - run: npm install -g npm@latest
+
+      - run: npm ci
+      - run: npm test
+      - run: npm run test:min
+
+      - name: The tag must match the version in package.json
+        run: |
+          test "${GITHUB_REF_NAME}" = "$(node -p "require('./package.json').version")" \
+            || { echo "::error::tag ${GITHUB_REF_NAME} != package.json version"; exit 1; }
+
+      # A tag may be (re)pushed just to feed jsDelivr; publishing the same version twice is an error.
+      - name: Is this version already on npm?
+        id: published
+        run: |
+          npm view "webhotkeys@${GITHUB_REF_NAME}" version >/dev/null 2>&1 \
+            && echo "skip=true" >> "$GITHUB_OUTPUT" \
+            || echo "skip=false" >> "$GITHUB_OUTPUT"
+
+      # Set the trusted publisher up once at npmjs.com (package -> Settings -> Trusted publisher:
+      # this repository + workflow "release.yml"). Until then, swap this for a classic token:
+      #   env: { NODE_AUTH_TOKEN: "${{ secrets.NPM_TOKEN }}" }
+      - if: steps.published.outputs.skip == 'false'
+        run: npm publish --provenance --access public

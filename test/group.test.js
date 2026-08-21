@@ -8,7 +8,8 @@ const fs = require('fs')
 const path = require('path')
 const assert = require('assert')
 
-const code = fs.readFileSync(path.join(__dirname, '../WebHotkeys.js'), 'utf8')
+// WH_FILE lets the very same tests run against the minified build (see `npm run test:min`)
+const code = fs.readFileSync(path.join(__dirname, '..', process.env.WH_FILE || 'WebHotkeys.js'), 'utf8')
 
 function loadWebHotkeys() {
     class FakeHTMLElement { }

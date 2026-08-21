@@ -1,29 +1,124 @@
+<!doctype html>
 <html>
 
 <head>
-    <script src="https://cdn.jsdelivr.net/gh/e3rd/WebHotkeys@latest/WebHotkeys.js?register"></script>
+    <meta charset="utf-8">
+    <title>WebHotkeys example</title>
+    <script src="WebHotkeys.js?register"></script>
+    <style>
+        body { font-family: system-ui, sans-serif; max-width: 50em; margin: 2em auto; padding: 0 1em; line-height: 1.5 }
+        section { border-top: 1px solid #ddd; padding-top: 1em; margin-top: 1.5em }
+        kbd { background: #eee; border: 1px solid #ccc; border-radius: .25em; padding: 0 .3em; font-family: monospace }
+        li.active { background: gold }
+        ul#tracks { max-height: 6em; overflow: auto; border: 1px solid #ccc; padding: .5em 2em; margin: 0 }
+        #log { font-family: monospace; font-size: .85em; color: #555; white-space: pre-wrap }
+    </style>
 </head>
 
 <body>
-    <button onclick="alert('Clicked the button')" data-hotkey="Ctrl+j">button</button>
-    <br><br>
-    Currently active shortcuts:
-    <p id="hint"></p>
+    <h1>WebHotkeys</h1>
+    <p>Hit <kbd>F1</kbd> for the help dialog, <kbd>F2</kbd> to badge every element having a hotkey.</p>
+
+    <section>
+        <h2>Declarative</h2>
+        <button onclick="alert('Clicked the button')" data-hotkey="Ctrl+j">button</button>
+        <span data-hotkey-group="Form">
+            <input data-hotkey="Alt+n" title="Focus the note" placeholder="a note">
+            <label><input type="checkbox" data-hotkey="Alt+c" data-hotkey-action="toggle" title="Toggle me"> checkbox
+                toggled, not focused</label>
+        </span>
+    </section>
+
+    <section>
+        <h2>Sequences</h2>
+        <p>Hit <kbd>g</kbd> then <kbd>i</kbd>. Or <kbd>g</kbd> alone - nothing happens, the key waits for the rest.
+            Tap <kbd>Shift</kbd> twice for a double tap.</p>
+    </section>
+
+    <section>
+        <h2>The list helper</h2>
+        <p>Arrows, <kbd>Home</kbd>/<kbd>End</kbd>, or type the first letters of a track.</p>
+        <ul id="tracks">
+            <li>Aria</li>
+            <li>Ballad</li>
+            <li>Cantata</li>
+            <li>Dirge</li>
+            <li>Etude</li>
+            <li>Fugue</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Remapping</h2>
+        <p><kbd id="remappable">Alt+r</kbd> shows an alert. Hit <kbd>F1</kbd> and click any combination there to press
+            your own – a whole sequence works too (type <kbd>g</kbd> <kbd>i</kbd> and pause). The layout is kept in the
+            localStorage, <code>↺</code> puts the default back.</p>
+        <p>Or record it yourself: <button onclick="record()">Record a new combination</button></p>
+    </section>
+
+    <section>
+        <h2>Currently active shortcuts</h2>
+        <p id="hint"></p>
+        <div id="log"></div>
+    </section>
+
     <script>
         const wh = window.webHotkeys
-        wh.grab("Enter", "Displays an alert", () => alert("This happens"))
-        wh.grab("Digit1", "Hint", () => alert("Digit1 key (whatever keyboard layout) hit"))
-        wh.grab("Alt+ArrowDown", "Hint", () => alert("Alt+ArrowDown hit"))
-        wh.grab("KeyF", "Hint", () => alert("Litter f hit (specified by the `code` property)"))
-        wh.grab("2", "Hint", () => alert("Number 2 hit"))
-        wh.grab("+", "Hint", () => alert("Plus sign hit"))
-        wh.grab("?", "Hint", () => alert("Question mark hit (you don't have to mention shift in the shortcut)"))
-        wh.grab("Alt++", "Hint", () => alert("Plus sign with the Alt hit"))
-        wh.grab("g", "Hint", () => alert("Letter g hit (specified by the `key` property)"))
+        // the `hintKey` option does the same when passed to the constructor
+        wh.setOptions({ onMiss: e => log(`miss: ${e.key}`) })
+        wh.grab("F2", "Badge the elements having a hotkey", () => wh.toggleHints())
 
-        document.addEventListener("DOMContentLoaded", () => // wait the [data-hotkey] to be registered
-            document.getElementById("hint").innerHTML = wh.getText().split("\n").join("<br>"))
+        // plain combinations
+        wh.grab("Digit1", "Digit 1, whatever the keyboard layout", () => alert("Digit1 hit"))
+        wh.grab("Alt+ArrowDown", "Alt+ArrowDown", () => alert("Alt+ArrowDown hit"))
+        wh.grab("?", "A question mark, no need to mention Shift", () => alert("Question mark hit"))
+        wh.grab("Alt++", "The plus sign with Alt", () => alert("Alt and the plus sign hit"))
+        wh.grab("Mod+s", "Ctrl+s here, Cmd+s on a Mac", () => alert("Mod+s hit"))
+        wh.grab("g", "The letter g alone", () => alert("The letter g hit"))
+
+        // sequences - `g i` wins over the plain `g` once the sequence is complete
+        wh.group("Sequences", [
+            ["g i", "Go to issues (a sequence)", () => alert("The `g i` sequence hit")],
+            ["Shift Shift", "Double tap", () => alert("Shift tapped twice")],
+        ])
+
+        // a hotkey that survives a text field
+        wh.grab("Escape", "Leave the text field", () => document.activeElement.blur()).allowInInput()
+
+        // the list helper
+        wh.list("ul#tracks li")
+            .setCurrentSelector(".active")
+            .setWrap()
+            .handleUpDown()
+            .handleHomeEnd()
+            .handleTypeahead()
+
+        // remapping
+        const remappable = wh.grab("Alt+r", "A remappable hotkey", () => alert("The remappable hotkey hit"))
+        wh.setOptions({
+            onRemap: map => { // the F1 dialog changed something (this is what you would send to the server)
+                log(`Remapping: ${JSON.stringify(map)}`)
+                refresh()
+            }
+        })
+        function record() {
+            log("Hit any combination…")
+            wh.record(combination => {
+                remappable.rebind(combination)
+                refresh()
+                log(`Rebound to ${remappable.getClue()}`)
+            })
+        }
+
+        function log(message) {
+            document.getElementById("log").textContent = message
+        }
+        function refresh() {
+            document.getElementById("hint").innerHTML = wh.getText().split("\n").join("<br>")
+            document.getElementById("remappable").textContent = remappable.getClue()
+        }
+        document.addEventListener("DOMContentLoaded", refresh) // wait for the [data-hotkey] to be registered
     </script>
 </body>
 
-</html>í
+</html>
