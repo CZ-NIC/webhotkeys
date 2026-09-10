@@ -16,15 +16,15 @@ The entire library is `WebHotkeys.js` — a single self-contained file with no r
 - `WebHotkeys.mjs` — three-line ESM re-export wrapper for the npm `exports` map (`import` resolves here, `require` to `WebHotkeys.js`). Keep its named exports in sync with the `module.exports` block.
 - `index.d.ts` — hand-written TypeScript definitions (there is no TS source to generate them from); update alongside any public API change.
 - `package.json` — npm packaging metadata only (`main`/`module`/`types` + `exports`); there's no build output, the published files are the source files. `npm test` runs every test file.
-- `example.html` — live usage demo, also published as GitHub Pages at the URL in README.md.
-- `README.md` — the API reference; keep it in sync with `WebHotkeys.js` when changing public behavior (parameter names, options, method semantics).
+- `README.md` — a short npm-facing pitch (install snippets + a handful of examples); the full API reference lives in `docs/`, kept in sync with `WebHotkeys.js` when changing public behavior (parameter names, options, method semantics).
+- `mkdocs.yml` + `docs/` — the mkdocs-material documentation site (`index.md`, `usage.md`, `options.md`, `hotkeys.md`, `layouts.md`, `elements-groups.md`, `help-remapping.md`, `list.md`, `debugging.md`, `migration.md`), deployed to GitHub Pages by `.github/workflows/docs.yml` (`mkdocs gh-deploy`). `docs/example.html` is the live usage demo, served at `https://cz-nic.github.io/webhotkeys/example.html`; it references the library as `../WebHotkeys.js?register` since it sits one level under the repo root.
 - `CHANGELOG.md` — one entry per released version, newest first; update when bumping the version.
 - `test/*.test.js` — plain Node scripts (no framework, no dependencies). `WebHotkeys.js` is a browser script with no `module.exports`, so each test file loads it into a `vm` context with a minimal `document`/`HTMLElement`/`MutationObserver` stub. Run them all with `npm test`, or a single one with `node test/<name>.test.js`. `npm run test:min` runs the same suite against `WebHotkeys.min.js` (via the `WH_FILE` env var) — that is the only guard against the minifier breaking something, so keep new tests loading the file through `WH_FILE`. `test/esm-import.test.mjs` covers the ESM entry point and needs no stub.
 - `ARTICLE.md` — draft material for a blog post: copyable examples plus a feature comparison against @github/hotkey, tinykeys, Mousetrap, hotkeys-js and react-hotkeys-hook. Not documentation; the competitor numbers are a snapshot and need re-checking before publishing.
 - `plan.md` — the npm/GitHub migration checklist plus the feature brainstorm. Untracked scratch.
 - `_untracked` — scratch notes about the original "shadow shortcut" idea. Superseded: the numpad/`Return` aliasing now lives in `CODE_ALIASES`/`KEY_ALIASES` and is resolved in `_candidates`.
 
-For anything not covered by the Node tests (rendering, real `KeyboardEvent`s, DOM mutation timing), verify manually by opening `example.html` in a browser and exercising the shortcuts.
+For anything not covered by the Node tests (rendering, real `KeyboardEvent`s, DOM mutation timing), verify manually by opening `docs/example.html` in a browser and exercising the shortcuts.
 
 ## Versioning
 

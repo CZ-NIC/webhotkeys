@@ -1,0 +1,19 @@
+site_name: WebHotkeys
+site_url: https://cz-nic.github.io/webhotkeys/
+repo_url: https://github.com/CZ-NIC/webhotkeys
+repo_name: CZ-NIC/webhotkeys
+
+theme:
+  name: material
+
+nav:
+  - Home: index.md
+  - Usage: usage.md
+  - Options: options.md
+  - Hotkeys: hotkeys.md
+  - Keyboard layouts: layouts.md
+  - Elements & groups: elements-groups.md
+  - Help & remapping: help-remapping.md
+  - List helper: list.md
+  - Debugging: debugging.md
+  - Migration: migration.md
