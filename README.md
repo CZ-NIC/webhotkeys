@@ -4,7 +4,7 @@ Easy solution to integrate keyboard hotkeys into the webpage.
 
 ```html
 <script src="https://cdn.jsdelivr.net/gh/CZ-NIC/webhotkeys@0.10.0/WebHotkeys.min.js?register"
-        integrity="sha384-6r8nvlzfzISsaEOaKEQyXSepzU1VlE2yUmphB4Zf6Vc4aKAvDQx9EyPBdvbZ16gu"
+        integrity="sha384-55rjsm8mxmUYTBiTOyaoPXo7/6mVRioI/eyv4mSd3iI0EDUcgRuL2RXVqn45aCgz"
         crossorigin="anonymous"></script>
 ```
 

@@ -50,6 +50,8 @@ Start listening to a hotkey. Specify hint and callback to be triggered on hit. R
 
     A sequence beats a plain hotkey ending with the same key – `i` still works on its own, `g i` wins when `g` preceded it.
 
+    A plain hotkey starting with the same key as a sequence is held back for `sequenceTimeout`, in case the sequence is what the user is actually typing – grab both `g` and `g i` and pressing `g` alone still fires the plain hotkey, just after that short delay; pressing `g` then `i` fires the sequence instead, with no delay perceptible for `g i` itself.
+
     **Keyboard layouts.** A multi-character name is a `code` (a physical key, layout independent), a single character is a `key` (the character produced, layout dependent) – see [Keyboard layouts](layouts.md).
 
     **The numeric keypad** falls back to the main row: a hotkey grabbed as `Digit1` or `Enter` fires from `Numpad1` / `NumpadEnter` as well, unless another hotkey claims the numpad code explicitly.

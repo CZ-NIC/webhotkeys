@@ -19,7 +19,8 @@
  * @property {boolean|string} [remap=true]  The F1 dialog lets the user click a combination and press their own. A string is used as the localStorage key (true means 'webhotkeys.remap'), false turns the editing off.
  * @property {?function} [onRemap]  Called with the remapping object whenever the user changes a combination. Handy to store the layout on the server. @see remapping
  * @property {?boolean} [mac=null]  Display the combinations with the macOS symbols (⌘⌥⇧⌃) and resolve the 'Mod' modifier to Meta. Null means autodetect.
- * @property {boolean} [warnConflicts=false]  Console warn when a newly grabbed hotkey shadows an existing scope-less one.
+ * @property {boolean} [warnConflicts=false]  Console warn when a newly grabbed hotkey shadows an existing scope-less one,
+ *  or when a plain hotkey and a longer sequence (ex: 'g' and 'g i') would shadow one another.
  */
 const WebHotkeysDefaults = {
     replaceAccesskeys: true, helpKey: "F1", help: "dialog", hintKey: "F2",
@@ -241,6 +242,17 @@ class Hotkey {
     }
 
     /**
+     * Is `shorter` a strict prefix of `longer`? Ex: 'g' is a prefix of the 'g i' sequence -
+     * the plain hotkey then shadows the sequence until its keystroke is disambiguated.
+     * @param {KeyEvent[]} shorter
+     * @param {KeyEvent[]} longer
+     * @returns {boolean}
+     */
+    static isPrefixOf(shorter, longer) {
+        return shorter.length < longer.length && shorter.every((step, i) => Hotkey.match(step, longer[i]))
+    }
+
+    /**
      * Move the hotkey to another combination, ex. because the user remapped it.
      * @param {?Key} combination Nothing (or null) puts the hotkey back to its default combination.
      * @param {boolean} store Record the change in the remapping (and persist it). Internal use.
@@ -366,6 +378,9 @@ class WebHotkeys {
         this._all = new Set()
         /** @type {{event: KeyEvent, time: number}[]} Recent keystrokes, the material for the key sequences. */
         this._buffer = []
+        /** @type {?{hotkey: Hotkey, event: KeyEvent, timer: *}} A plain hotkey whose key also begins a longer
+         * registered sequence: held back until `sequenceTimeout` passes or the next keystroke settles it. */
+        this._deferred = null
         /**
          * @type {Object.<Key, Key>} The user changes (default combination -> the current one).
          * Kept as the single source of truth, not derived from the hotkeys: a remapping may well
@@ -486,6 +501,7 @@ class WebHotkeys {
         this._groups = Object.create(null)
         this._dom = new WeakMap()
         this._buffer = []
+        this._settleDeferred(false)
         this._style?.remove?.()
         this._style = this._sheet = undefined
         this._destroyed = true
@@ -637,6 +653,18 @@ class WebHotkeys {
             if (conflict.length > 1) {
                 console.warn(`WebHotkeys.js> ${combination} is grabbed ${conflict.length}x:`,
                     conflict.map(h => h.hint || h.action))
+            }
+            if (!hotkeyO.scope) {
+                // A plain hotkey next to a longer sequence sharing its start: the plain one always
+                // wins after `sequenceTimeout` ms, delaying it - surprising unless done on purpose.
+                const shadow = this.getHotkeys().find(h => h !== hotkeyO && !h.scope
+                    && (Hotkey.isPrefixOf(h.sequence, hotkeyO.sequence) || Hotkey.isPrefixOf(hotkeyO.sequence, h.sequence)))
+                if (shadow) {
+                    const [plain, sequence] = hotkeyO.sequence.length < shadow.sequence.length ? [hotkeyO, shadow] : [shadow, hotkeyO]
+                    console.warn(`WebHotkeys.js> ${plain.combination} shadows the sequence ${sequence.combination} - `
+                        + `the plain hotkey fires only after a ${this.options.sequenceTimeout}ms delay, in case the sequence doesn't complete:`,
+                        [plain.hint || plain.action, sequence.hint || sequence.action])
+                }
             }
         }
         return hotkeyO
@@ -981,6 +1009,93 @@ class WebHotkeys {
     }
 
     /**
+     * @param {KeyEvent} e The keystroke under consideration - not pushed into `_buffer` yet.
+     * @param {number} now
+     * @returns {boolean} Would `_buffer` plus `e` still be a live prefix of some longer registered sequence?
+     *  (Ex: a plain 'g' hotkey next to a grabbed 'g i' sequence - 'g' alone must not fire it right away.)
+     */
+    _matchesPrefix(e, now) {
+        return this.getHotkeys().some(hotkey => hotkey.sequence.length > this._buffer.length + 1
+            && this._buffer.every((entry, i) => now - entry.time <= this.options.sequenceTimeout
+                && Hotkey.match(hotkey.sequence[i], entry.event))
+            && Hotkey.match(hotkey.sequence[this._buffer.length], e))
+    }
+
+    /**
+     * A plain hotkey whose key also begins a longer registered sequence must not fire right away -
+     * the user may still be typing that sequence. Swallow it and wait `sequenceTimeout` ms; if nothing
+     * continues the sequence by then, run the plain hotkey after all.
+     * @param {Hotkey} hotkey
+     * @param {KeyEvent} e
+     */
+    _deferPlainHotkey(hotkey, e) {
+        this._deferred = {
+            hotkey, event: e,
+            timer: setTimeout(() => this._settleDeferred(true), this.options.sequenceTimeout),
+        }
+    }
+
+    /**
+     * Resolve a pending `_deferPlainHotkey` - either because its sequenceTimeout elapsed, because
+     * the next keystroke settled things one way or the other, or because the instance is being destroyed.
+     * @param {boolean} fire Run the deferred hotkey (nothing continued its sequence), or just drop it
+     *  (some hotkey - typically the sequence it shadows - fired instead).
+     */
+    _settleDeferred(fire) {
+        const deferred = this._deferred
+        if (!deferred) {
+            return
+        }
+        clearTimeout(deferred.timer)
+        this._deferred = null
+        if (fire) {
+            this._fireHotkey(deferred.hotkey, deferred.event)
+        }
+    }
+
+    /**
+     * Actually run a matched hotkey's action. Scope is (re)checked here, at fire time, since a
+     * deferred plain hotkey (see `_deferPlainHotkey`) may run well after its keystroke happened.
+     * @param {Hotkey} hotkey
+     * @param {KeyEvent} e
+     * @returns {boolean} Whether the hotkey fired. False lets the caller try the next candidate.
+     */
+    _fireHotkey(hotkey, e) {
+        const { action, element, scope } = hotkey
+        const active = this.activeElement()
+        // check we are in an allowed scope (the focused element has hotkey.scope for the ancestor)
+        if (scope && !( // The scope is either a selector or a function or an HTMLElement
+            isString(scope) ? active?.closest?.(scope)
+                : (scope instanceof Function ? scope.call(this, active, e)
+                    : scope.contains?.(active)))) {
+            return false // not allowed scope
+        }
+
+        let result
+        if (element) {
+            if (element.disabled || !isVisible(element)) {
+                return false // action is a disabled or hidden HTMLElement, try next shorcut
+            }
+            // note that result is always none
+            this._act(element)
+        } else {
+            result = action.call(this, e)
+        }
+
+        if (result === false) {
+            return false // custom method failed, try next hotkey
+        }
+
+        this._buffer.length = 0 // the sequence has been consumed
+        this.options.onTrigger?.call(this, hotkey, e)
+
+        // prevent default behaviour (ex: Ctrl+L going to the address bar)
+        e.stopPropagation?.() // the method may not be available in a crafted event
+        e.preventDefault?.()
+        return true
+    }
+
+    /**
      *
      * @param {KeyEvent} e
      * @returns {undefined|boolean}
@@ -1019,38 +1134,15 @@ class WebHotkeys {
             if (hotkey.sequence.length > 1 && !this._matchesSequence(hotkey, now)) {
                 continue // the preceding keystrokes were something else
             }
-            const { action, element, scope } = hotkey
-            // check we are in an allowed scope (the focused element has hotkey.scope for the ancestor)
-            if (scope && !( // The scope is either a selector or a function or an HTMLElement
-                isString(scope) ? active?.closest?.(scope)
-                    : (scope instanceof Function ? scope.call(this, active, e)
-                        : scope.contains?.(active)))) {
-                continue // not allowed scope
+            if (hotkey.sequence.length === 1 && this._matchesPrefix(e, now)) {
+                this._deferPlainHotkey(hotkey, e)
+                continue // let the code below swallow the key and wait to see if the sequence completes
             }
 
-            // trigger the hotkey
-            let result
-            if (element) {
-                if (element.disabled || !isVisible(element)) {
-                    continue // action is a disabled or hidden HTMLElement, continue to next shorcut
-                }
-                // note that result is always none
-                this._act(element)
-            } else {
-                result = action.call(this, e)
+            if (this._fireHotkey(hotkey, e)) {
+                this._settleDeferred(false) // a hotkey just fired (likely the sequence this deferred one shadows) - drop it
+                return true
             }
-
-            if (result === false) {
-                continue // custom method failed, try next hotkey
-            }
-
-            this._buffer.length = 0 // the sequence has been consumed
-            this.options.onTrigger?.call(this, hotkey, e)
-
-            // prevent default behaviour (ex: Ctrl+L going to the address bar)
-            e.stopPropagation?.() // the method may not be available in a crafted event
-            e.preventDefault?.()
-            return true
         }
 
         if (typing) {
@@ -1066,6 +1158,7 @@ class WebHotkeys {
             return
         }
         this._buffer.length = 0 // no sequence may start here, forget the history
+        this._settleDeferred(true) // ...including any deferred plain hotkey: nothing continued it, so it wins now
         this.options.onMiss?.call(this, e)
     }
 

@@ -110,7 +110,10 @@ Attribute name overriding what happens with a `[data-hotkey]` element: `click`, 
 ## `warnConflicts`
 
 Console warn when a newly grabbed hotkey shadows an existing scope-less one, right away instead of
-having to call [`getConflicts()`](debugging.md#method-getconflicts) yourself:
+having to call [`getConflicts()`](debugging.md#method-getconflicts) yourself. It also warns when a
+plain hotkey and a longer [sequence](hotkeys.md) share their first key (ex: `g` next to `g i`) - the
+plain one still works, but only fires after a `sequenceTimeout` delay, which is easy to miss without
+the warning:
 
 ```javascript
 const wh = new WebHotkeys({ warnConflicts: true })
