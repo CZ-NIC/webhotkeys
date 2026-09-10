@@ -9,7 +9,7 @@ The constructor (and `setOptions`) accepts an options object:
 | help | `'dialog'\|'alert'` | `dialog` | How the help is rendered. The dialog is a filterable modal; it falls back to the alert when the DOM is not available. |
 | [hintKey](#hintkey) | `?string` | `'F2'` | Key combination toggling the visual badges over every element having a hotkey. `null` grabs nothing. |
 | replaceAccesskeys | boolean | true | If true, [accesskey] elements will be converted to hotkeys. |
-| [observe](#observe) | boolean | true | Monitors DOM changes. Automatically un/grab hotkeys as DOM elements with the given selector dis/appear. |
+| [observe](#observe) | boolean | true | Monitors DOM changes. Automatically un/grab hotkeys as DOM elements with the given attribute dis/appear. |
 | onToggle | function| undefined | When having a DOM element linked, run this callback on hotkey toggle. This will be set to the hotkey, first parameter being the element, second boolean whether it got enabled. |
 | onTrigger | function| undefined | Called right after a hotkey fired, receives `(hotkey, event)`. Handy for logging. |
 | [onMiss](#onmiss) | function| undefined | Called when a keystroke matched no hotkey, receives `(event)`. Handy for debugging. |
@@ -19,9 +19,9 @@ The constructor (and `setOptions`) accepts an options object:
 | [onRemap](#remap-onremap) | function| undefined | Called with the whole remapping whenever the user changes a combination. Ex: store it on your server. |
 | mac | boolean | null | Render the combinations the Apple way (⌘⌥⇧⌃) and resolve `Mod` to Meta. Null autodetects. |
 | [warnConflicts](#warnconflicts) | boolean | false | Console warn when a newly grabbed hotkey shadows an existing scope-less one. |
-| selector | string | `data-hotkey` | Attribute name to link DOM elements to shorcuts. |
-| selectorGroup | string | `data-hotkey-group` | Attribute name to link DOM elements to shorcut groups. |
-| [selectorAction](#selectoraction) | string | `data-hotkey-action` | Attribute name overriding what happens with the element: `click`, `focus`, `toggle`, `none`. |
+| attribute | string | `data-hotkey` | Attribute name to link DOM elements to shorcuts. |
+| groupAttribute | string | `data-hotkey-group` | Attribute name to link DOM elements to shorcut groups. |
+| [actionAttribute](#actionattribute) | string | `data-hotkey-action` | Attribute name overriding what happens with the element: `click`, `focus`, `toggle`, `none`. |
 
 Should you need to change a one-time variable like `helpKey`, you want to prevent the implicit `new WebHotkeys` creation. Then, create the object manually:
 
@@ -97,7 +97,7 @@ attribute mutated - this lets `data-hotkey` be added/removed dynamically without
 const wh = new WebHotkeys({ observe: false })
 ```
 
-## `selectorAction`
+## `actionAttribute`
 
 Attribute name overriding what happens with a `[data-hotkey]` element: `click`, `focus`, `toggle`,
 `none`.

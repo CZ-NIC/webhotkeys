@@ -34,11 +34,11 @@ export interface WebHotkeysOptions {
     /** Called when a keystroke matched no hotkey. */
     onMiss?: ((this: WebHotkeys, event: KeyboardEvent) => void) | null
     /** Attribute name linking the DOM elements to the shortcuts. */
-    selector?: string
+    attribute?: string
     /** Attribute name linking the DOM elements to the groups. */
-    selectorGroup?: string
+    groupAttribute?: string
     /** Attribute name overriding what happens with the element: "click" | "focus" | "toggle" | "none". */
-    selectorAction?: string
+    actionAttribute?: string
     /** Selector or predicate. While it matches the focused element, no hotkey fires at all. */
     ignore?: string | ((this: WebHotkeys, active: HTMLElement | null, event: KeyboardEvent) => boolean) | null
     /** Milliseconds a key sequence ("g i") may be spread over. Also the pause committing a recorded sequence. */

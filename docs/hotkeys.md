@@ -91,7 +91,7 @@ general.toggle() // re-enable them
 general.toggle(false) // re-disable them
 ```
 
-Alternatively, you can set the group in the DOM. If not changed by `selectorGroup`), use the `[data-hotkey-group]` attribute either on the element or on any of its ancestors:
+Alternatively, you can set the group in the DOM. If not changed by `groupAttribute`), use the `[data-hotkey-group]` attribute either on the element or on any of its ancestors:
 
 ```html
 <a href="..." data-hotkey="Alt+1" data-hotkey-group="Global shortcuts" title="Go to an example link 1">link 1</a>

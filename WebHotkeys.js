@@ -7,13 +7,13 @@
  * @property {string|boolean} [help='dialog'] Values: 'dialog', 'alert'. How the help is displayed. The dialog falls back to the alert when the DOM is not available.
  * @property {?Key} [hintKey='F2'] Key combination that toggles the visual badges over all the elements having a hotkey. `null` grabs nothing.
  * @property {boolean} [replaceAccesskeys=true] If true, [accesskey] elements will be converted to hotkeys.
- * @property {boolean} [observe=true] Monitors DOM changes. Automatically un/grab hotkeys as DOM elements with the given selector dis/appear.
+ * @property {boolean} [observe=true] Monitors DOM changes. Automatically un/grab hotkeys as DOM elements with the given attribute dis/appear.
  * @property {?function} [onToggle]  When having a DOM element linked, run this callback on hotkey toggle. This will be set to the hotkey, first parameter being the element, second boolean whether it got enabled.
  * @property {?function} [onTrigger] Called after a hotkey fired, receives (hotkey, event). Handy for logging.
  * @property {?function} [onMiss] Called when a keystroke matched no hotkey, receives (event). Handy for debugging.
- * @property {string} [selector='data-hotkey']  Attribute name to link DOM elements to shorcuts.
- * @property {string} [selectorGroup='data-hotkey-group']  Attribute name to link DOM elements to shorcut groups.
- * @property {string} [selectorAction='data-hotkey-action']  Attribute name to override what happens with the element ('click', 'focus', 'toggle').
+ * @property {string} [attribute='data-hotkey']  Attribute name to link DOM elements to shorcuts.
+ * @property {string} [groupAttribute='data-hotkey-group']  Attribute name to link DOM elements to shorcut groups.
+ * @property {string} [actionAttribute='data-hotkey-action']  Attribute name to override what happens with the element ('click', 'focus', 'toggle').
  * @property {?string|?function} [ignore=null]  Selector or callback(activeElement, event). When it matches, no hotkey is triggered at all.
  * @property {number} [sequenceTimeout=1000]  Milliseconds a key sequence ('g i') may be spread over. Also how long the F1 dialog waits before committing a recorded sequence.
  * @property {boolean|string} [remap=true]  The F1 dialog lets the user click a combination and press their own. A string is used as the localStorage key (true means 'webhotkeys.remap'), false turns the editing off.
@@ -24,7 +24,7 @@
  */
 const WebHotkeysDefaults = {
     replaceAccesskeys: true, helpKey: "F1", help: "dialog", hintKey: "F2",
-    selector: "data-hotkey", selectorGroup: "data-hotkey-group", selectorAction: "data-hotkey-action",
+    attribute: "data-hotkey", groupAttribute: "data-hotkey-group", actionAttribute: "data-hotkey-action",
     observe: true, onToggle: null, onTrigger: null, onMiss: null, hint: "title",
     ignore: null, sequenceTimeout: 1000, mac: null, warnConflicts: false,
     remap: true, onRemap: null
@@ -406,13 +406,13 @@ class WebHotkeys {
          * @param {HTMLElement} el
          * @returns {boolean} Has [data-hotkey] attribute
          */
-        const eligible = el => el.getAttribute?.(options.selector)?.length
+        const eligible = el => el.getAttribute?.(options.attribute)?.length
         /** @param {HTMLElement} el Grab the element's [data-hotkey] attribute */
         // The user might pass a dynamically created element with [data-hotkey] to grab. In such case, MutationObserver will notify us
         // about the element when the original thread ceases. Thus, if we have not checked whether the element has already linked
         // the hotkey through the this._dom, it would be regrabbed and strange bugs would be produced. (Ex: double onToggle callback.)
-        // const grab = el => !this._dom.has(el)&& this._dom.set(el, this.grab(el.getAttribute(options.selector), el.getAttribute("title"), el))
-        const grab = el => !this._dom.has(el) && this.grab(el.getAttribute(options.selector), el.getAttribute("title"), el)
+        // const grab = el => !this._dom.has(el)&& this._dom.set(el, this.grab(el.getAttribute(options.attribute), el.getAttribute("title"), el))
+        const grab = el => !this._dom.has(el) && this.grab(el.getAttribute(options.attribute), el.getAttribute("title"), el)
 
         //
         // Process options
@@ -425,7 +425,7 @@ class WebHotkeys {
             document.querySelectorAll("[accesskey]:not([accesskey=''])").forEach(el => {
                 // if concurrent accesskeys exists, preventDefault of the WebHotkeys would make it to fire alongside the hotkey,
                 // hence we transform accesskeys to hotkeys as well
-                el.setAttribute(options.selector, "Alt+" + el.getAttribute("accesskey"))
+                el.setAttribute(options.attribute, "Alt+" + el.getAttribute("accesskey"))
                 el.removeAttribute("accesskey")
             })
         }
@@ -438,7 +438,7 @@ class WebHotkeys {
         }
 
         // Grabs all [data-hotkey] elements. Puts its title as a help text.
-        document.querySelectorAll(`[${options.selector}]`).forEach(grab)
+        document.querySelectorAll(`[${options.attribute}]`).forEach(grab)
 
         if (options.observe) {
             // un/register hotkey on DOM change
@@ -453,17 +453,17 @@ class WebHotkeys {
                     } else if (mutation.type === "childList") {
                         // Grab all the added nodes and their subtrees
                         [...Array.from(mutation.addedNodes).filter(eligible),
-                        ...Array.from(mutation.addedNodes).map(el => Array.from(el.querySelectorAll?.(`[${options.selector}]`) || [])).flat()
+                        ...Array.from(mutation.addedNodes).map(el => Array.from(el.querySelectorAll?.(`[${options.attribute}]`) || [])).flat()
                         ].forEach(grab); // ; needed
                         // Ungrab all the added nodes and their subtrees
                         [...Array.from(mutation.removedNodes).filter(eligible),
-                        ...Array.from(mutation.removedNodes).map(el => Array.from(el.querySelectorAll?.(`[${options.selector}]`) || [])).flat()]
+                        ...Array.from(mutation.removedNodes).map(el => Array.from(el.querySelectorAll?.(`[${options.attribute}]`) || [])).flat()]
                             .forEach(el => this._dom.get(el).disable() && this._dom.delete(el))
                     }
 
                 }
             })
-            this._observer.observe(document, { attributeFilter: [options.selector], childList: true, subtree: true })
+            this._observer.observe(document, { attributeFilter: [options.attribute], childList: true, subtree: true })
         }
 
         //
@@ -636,12 +636,12 @@ class WebHotkeys {
         }
 
         const { element } = hotkeyO
-        const { selectorGroup } = this.options
+        const { groupAttribute } = this.options
         if (element) {
             this._dom.set(element, hotkeyO)
 
             // register group
-            const groupName = element.closest(`[${selectorGroup}]`)?.getAttribute(selectorGroup)
+            const groupName = element.closest(`[${groupAttribute}]`)?.getAttribute(groupAttribute)
             if (groupName) {
                 this.group(groupName).push(hotkeyO)
             }
@@ -1167,7 +1167,7 @@ class WebHotkeys {
      * @param {HTMLElement} element
      */
     _act(element) {
-        const mode = element.getAttribute?.(this.options.selectorAction)
+        const mode = element.getAttribute?.(this.options.actionAttribute)
             || (FORM_TAGS.includes(element.tagName) && element.type !== "checkbox" ? "focus" : "click")
         switch (mode) {
             case "focus": return element.focus()

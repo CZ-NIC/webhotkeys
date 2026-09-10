@@ -21,6 +21,8 @@ Fix: a remapping loaded from `localStorage` or from a server used to reach the e
 Fix: a foreign value found under our `localStorage` key is left intact - the layout is not persisted and a warning names the key. The page shares the origin with us.
 Fix: `warnConflicts` used to call `getConflicts()` (a full scan of every grabbed hotkey) on every single `grab()`, making it quadratic; it now only scans the bucket the new hotkey lands in.
 Fix: a plain hotkey sharing the first key of a longer sequence (ex: `g` next to `g i`) used to fire immediately and eat the sequence for good; it is now held back for `sequenceTimeout`, so the sequence gets a chance to complete first. `warnConflicts` flags such pairs too.
+Change: `<script src="...?register">` is replaced by `<script data-register>` - a query string on a static asset can be stripped or duplicated by a proxy/CDN pipeline, a data attribute cannot.
+Change: options `selector`/`selectorGroup`/`selectorAction` are renamed to `attribute`/`groupAttribute`/`actionAttribute` - the old names described DOM attribute names (`'data-hotkey'`), not CSS selectors, which was misleading.
 
 # 0.9.7 (2026-08-08)
 Add: installable from npm (`npm install webhotkeys`), usable via `require`/`import`. The classic `<script>` tag usage is unaffected.
