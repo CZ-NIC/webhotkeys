@@ -42,14 +42,14 @@ function test(name, fn) {
 const WebHotkeys = loadWebHotkeys()
 
 test('group named "constructor" returns a usable HotkeyGroup, not Object', () => {
-    const wh = new WebHotkeys({ grabF1: false, observe: false, replaceAccesskeys: false })
+    const wh = new WebHotkeys({ observe: false, replaceAccesskeys: false })
     const group = wh.group('constructor')
     assert.strictEqual(typeof group.push, 'function', 'group("constructor") must be a HotkeyGroup with .push()')
     assert.doesNotThrow(() => group.push('x'))
 })
 
 test('group named "__proto__" does not corrupt the _groups registry prototype', () => {
-    const wh = new WebHotkeys({ grabF1: false, observe: false, replaceAccesskeys: false })
+    const wh = new WebHotkeys({ observe: false, replaceAccesskeys: false })
     const protoBefore = Object.getPrototypeOf(wh._groups)
     wh.group('__proto__')
     assert.strictEqual(Object.getPrototypeOf(wh._groups), protoBefore, '_groups prototype must stay unchanged')
@@ -59,7 +59,7 @@ test('group named "__proto__" does not corrupt the _groups registry prototype', 
 })
 
 test('disabling an already-disabled hotkey does not remove a foreign hotkey sharing the combination', () => {
-    const wh = new WebHotkeys({ grabF1: false, observe: false, replaceAccesskeys: false })
+    const wh = new WebHotkeys({ observe: false, replaceAccesskeys: false })
     const a = wh.grab('Ctrl+k', 'A', () => { })
     const b = wh.grab('Ctrl+k', 'B', () => { }) // same KeyState bucket as `a`
     a.disable()

@@ -76,7 +76,7 @@ function testAsync(name, fn) {
 
 const { WebHotkeys, sandbox, listeners, FakeHTMLElement } = loadWebHotkeys()
 // remap: false by default, otherwise every instance would pick up what a previous test stored
-const OPTS = { grabF1: false, observe: false, replaceAccesskeys: false, mac: false, remap: false }
+const OPTS = { helpKey: null, hintKey: null, observe: false, replaceAccesskeys: false, mac: false, remap: false }
 const fresh = (extra = {}) => new WebHotkeys({ ...OPTS, ...extra })
 /** A real keydown (unlike `simulate`, it goes through the document listeners, `record` included). */
 const dispatch = e => listeners.filter(l => l.type === "keydown")
@@ -151,24 +151,24 @@ test('a longer sequence does not block the plain hotkey of its last key', () => 
 //
 
 test('"Mod+" resolves to Ctrl off a Mac and to Meta on a Mac', () => {
-    assert.strictEqual(fresh({ mac: false }).grab("Mod+s", "Save", () => { }).getCombination(), "Ctrl+s")
-    assert.strictEqual(fresh({ mac: true }).grab("Mod+s", "Save", () => { }).getCombination(), "Meta+s")
+    assert.strictEqual(fresh({ mac: false }).grab("Mod+s", "Save", () => { }).combination, "Ctrl+s")
+    assert.strictEqual(fresh({ mac: true }).grab("Mod+s", "Save", () => { }).combination, "Meta+s")
 })
 
 test('the clue uses the Apple symbols on a Mac only', () => {
-    assert.strictEqual(fresh({ mac: true }).grab("Ctrl+Shift+Mod+k", "X", () => { }).getClue(), "⌃⌥⇧⌘k".replace("⌥", ""))
-    assert.strictEqual(fresh({ mac: false }).grab("Ctrl+Shift+k", "X", () => { }).getClue(), "Ctrl+Shift+k")
+    assert.strictEqual(fresh({ mac: true }).grab("Ctrl+Shift+Mod+k", "X", () => { }).clue, "⌃⌥⇧⌘k".replace("⌥", ""))
+    assert.strictEqual(fresh({ mac: false }).grab("Ctrl+Shift+k", "X", () => { }).clue, "Ctrl+Shift+k")
 })
 
 test('metaKey is part of the clue (used to be dropped)', () => {
-    assert.strictEqual(fresh().grab("Meta+k", "X", () => { }).getClue(), "Meta+k")
+    assert.strictEqual(fresh().grab("Meta+k", "X", () => { }).clue, "Meta+k")
 })
 
 test('friendly spellings: Return, Esc, Up', () => {
     const wh = fresh()
-    assert.strictEqual(wh.grab("Return", "X", () => { }).getCombination(), "Enter")
-    assert.strictEqual(wh.grab("Esc", "X", () => { }).getCombination(), "Escape")
-    assert.strictEqual(wh.grab("Alt+Up", "X", () => { }).getCombination(), "Alt+ArrowUp")
+    assert.strictEqual(wh.grab("Return", "X", () => { }).combination, "Enter")
+    assert.strictEqual(wh.grab("Esc", "X", () => { }).combination, "Escape")
+    assert.strictEqual(wh.grab("Alt+Up", "X", () => { }).combination, "Alt+ArrowUp")
 })
 
 test('the numpad falls back to the main row, unless claimed explicitly', () => {
@@ -191,21 +191,49 @@ test('simulate() of a code-only event does not throw (no `key` property)', () =>
     assert.strictEqual(fired, 1)
 })
 
+test('simulate() fills in the missing key/code, so a text field blocks it like a real keystroke', () => {
+    const wh = fresh()
+    const hits = []
+    wh.grab("Escape", "Close", () => hits.push("escape"))
+    wh.grab("ArrowDown", "Next", () => hits.push("arrowdown"))
+    wh.grab("Enter", "Submit", () => hits.push("enter"))
+
+    sandbox.document.activeElement = Object.assign(new FakeHTMLElement("INPUT"), { type: "text" })
+    wh.simulate("Escape")
+    wh.simulate("ArrowDown")
+    wh.simulate("Enter")
+    sandbox.document.activeElement = null
+    assert.deepStrictEqual(hits, ["escape"], "ArrowDown/Enter are text editing keys, Escape is not")
+})
+
 //
 // Text fields
 //
 
-test('a plain letter is ignored while typing, unless allowInInput', () => {
+test('a plain letter is ignored while typing, unless {inInput: true}', () => {
     const wh = fresh()
     const hits = []
     wh.grab("f", "Plain", () => hits.push("plain"))
-    wh.grab("Escape", "Close", () => hits.push("escape")).allowInInput()
+    wh.grab("Escape", "Close", () => hits.push("escape"), { inInput: true })
 
     sandbox.document.activeElement = Object.assign(new FakeHTMLElement("INPUT"), { type: "text" })
     wh.simulate("f")
     wh.simulate("Escape")
     sandbox.document.activeElement = null
     assert.deepStrictEqual(hits, ["escape"])
+})
+
+test('{inInput: true} unlocks ArrowDown in a text field, plain ArrowDown does not', () => {
+    const wh = fresh()
+    const hits = []
+    wh.grab("ArrowDown", "Plain", () => hits.push("plain"))
+    wh.grab("ArrowDown", "Combo", () => hits.push("combo"), { scope: "#combo", inInput: true })
+
+    sandbox.document.activeElement = Object.assign(new FakeHTMLElement("INPUT"), { type: "text" })
+    sandbox.document.activeElement.closest = selector => selector === "#combo" ? sandbox.document.activeElement : null
+    wh.simulate("ArrowDown")
+    sandbox.document.activeElement = null
+    assert.deepStrictEqual(hits, ["combo"])
 })
 
 test('the `ignore` option switches the hotkeys off entirely', () => {
@@ -295,7 +323,7 @@ test('getConflicts() reports the scope-less duplicates only', () => {
     assert.strictEqual(conflicts[0].combination, "Alt+c")
 })
 
-test('rebind() moves the hotkey and keeps its original combination for the remapping', () => {
+test('rebind() moves the hotkey and keeps its original combination for remapping()', () => {
     const wh = fresh()
     let fired = 0
     const hotkey = wh.grab("Alt+r", "Reload", () => fired++)
@@ -304,14 +332,14 @@ test('rebind() moves the hotkey and keeps its original combination for the remap
     assert.strictEqual(fired, 0, "the old combination must be free")
     wh.simulate("Alt+t")
     assert.strictEqual(fired, 1)
-    assert.deepEqual(wh.getRemapping(), { "Alt+r": "Alt+t" })
+    assert.deepEqual(wh.remapping(), { "Alt+r": "Alt+t" })
 })
 
-test('applyRemapping() restores the user changes', () => {
+test('remapping(map) restores the user changes', () => {
     const wh = fresh()
     let fired = 0
     wh.grab("Alt+r", "Reload", () => fired++)
-    wh.applyRemapping({ "Alt+r": "Alt+u" })
+    wh.remapping({ "Alt+r": "Alt+u" })
     wh.simulate("Alt+u")
     assert.strictEqual(fired, 1)
 })
@@ -333,26 +361,26 @@ test('rebind() with no argument puts the hotkey back where it was', () => {
     hotkey.rebind("Alt+t").rebind()
     wh.simulate("Alt+r")
     assert.strictEqual(fired, 1)
-    assert.deepEqual(wh.getRemapping(), {}, "back to the default = not a remapping any more")
+    assert.deepEqual(wh.remapping(), {}, "back to the default = not a remapping any more")
 })
 
-test('applyRemapping() is the full state - what is missing goes back to the default', () => {
+test('remapping(map) is the full state - what is missing goes back to the default', () => {
     const wh = fresh()
     let fired = 0
     const hotkey = wh.grab("Alt+r", "Reload", () => fired++)
     hotkey.rebind("Alt+u")
-    wh.applyRemapping({})
-    assert.strictEqual(hotkey.getCombination(), "Alt+r")
+    wh.remapping({})
+    assert.strictEqual(hotkey.combination, "Alt+r")
     wh.simulate("Alt+r")
     assert.strictEqual(fired, 1)
 })
 
 test('a hotkey grabbed later is remapped as well', () => {
     const wh = fresh()
-    wh.applyRemapping({ "Alt+r": "Alt+u" }) // ex: loaded from the server before the view mounted
+    wh.remapping({ "Alt+r": "Alt+u" }) // ex: loaded from the server before the view mounted
     let fired = 0
     const hotkey = wh.grab("Alt+r", "Reload", () => fired++)
-    assert.strictEqual(hotkey.getCombination(), "Alt+u")
+    assert.strictEqual(hotkey.combination, "Alt+u")
     wh.simulate("Alt+u")
     assert.strictEqual(fired, 1)
 })
@@ -411,7 +439,7 @@ test('a foreign value under our key is never overwritten', () => {
     wh.grab("Alt+r", "Reload", () => { })
     wh.getHotkeys()[0].rebind("Alt+t")
     assert.strictEqual(sandbox.localStorage.getItem("taken"), '{"user": {"name": "Edvard"}}', "left intact")
-    assert.strictEqual(wh.getHotkeys()[0].getCombination(), "Alt+t", "the remapping itself still works")
+    assert.strictEqual(wh.getHotkeys()[0].combination, "Alt+t", "the remapping itself still works")
 })
 
 test('a remapping that is not a key combination is dropped, not hinted', () => {
@@ -421,13 +449,13 @@ test('a remapping that is not a key combination is dropped, not hinted', () => {
     const el = new FakeHTMLElement()
     el.innerHTML = "Save"
     const hotkey = wh.grab("Alt+s", "Save", el)
-    wh.applyRemapping({ "Alt+s": "<img src=x onerror=alert(1)>" })
-    assert.strictEqual(hotkey.getCombination(), "Alt+s", "left where it was")
+    wh.remapping({ "Alt+s": "<img src=x onerror=alert(1)>" })
+    assert.strictEqual(hotkey.combination, "Alt+s", "left where it was")
     assert.ok(!el.innerHTML.includes("<img"), `no markup got in: ${el.innerHTML}`)
-    assert.deepEqual(wh.getRemapping(), {})
+    assert.deepEqual(wh.remapping(), {})
 
-    wh.applyRemapping({ "Alt+s": "Ctrl+Shift+ArrowUp" }) // a legitimate one still passes
-    assert.strictEqual(hotkey.getCombination(), "Ctrl+Shift+ArrowUp")
+    wh.remapping({ "Alt+s": "Ctrl+Shift+ArrowUp" }) // a legitimate one still passes
+    assert.strictEqual(hotkey.combination, "Ctrl+Shift+ArrowUp")
 })
 
 test('the default storage key is a dotted one', () => {

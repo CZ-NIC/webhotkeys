@@ -95,22 +95,22 @@ const build = () => {
     return wh
 }
 
-test('showHelp() builds a row per hotkey and a heading per group', () => {
+test('toggleHelp(true) builds a row per hotkey and a heading per group', () => {
     const wh = build()
-    wh.showHelp()
+    wh.toggleHelp(true)
     assert.strictEqual(wh._help.open, true)
-    assert.strictEqual(wh._help.querySelectorAll(".webhotkeys-row").length, 3) // F1 + the two above
+    assert.strictEqual(wh._help.querySelectorAll(".webhotkeys-row").length, 4) // F1 + F2 + the two above
     wh.destroy()
 })
 
 test('the help filter hides the non-matching rows', () => {
     const wh = build()
-    wh.showHelp()
+    wh.toggleHelp(true)
     const filter = wh._help.children[0].children[1]
     filter.value = "druh"
     filter.oninput()
     const hidden = wh._help.querySelectorAll(".webhotkeys-row").filter(row => row.style.display === "none")
-    assert.strictEqual(hidden.length, 2, "only the matching row stays visible")
+    assert.strictEqual(hidden.length, 3, "only the matching row stays visible")
     wh.destroy()
 })
 
@@ -118,7 +118,7 @@ test('Escape closes the help and the page hotkeys stay silent meanwhile', () => 
     const wh = build()
     let fired = 0
     wh.grab("Alt+3", "Třetí", () => fired++)
-    wh.showHelp()
+    wh.toggleHelp(true)
     wh.simulate("Alt+3")
     assert.strictEqual(fired, 0, "the dialog swallows the page hotkeys")
     wh.simulate("Escape")
@@ -128,11 +128,11 @@ test('Escape closes the help and the page hotkeys stay silent meanwhile', () => 
     wh.destroy()
 })
 
-test('showHints() badges the elements only, positioned absolutely', () => {
+test('toggleHints(true) badges the elements only, positioned absolutely', () => {
     const wh = build()
     const button = new FakeElement("button")
     wh.grab("Alt+b", "Tlačítko", button)
-    wh.showHints()
+    wh.toggleHints(true)
     assert.strictEqual(wh._hints.children.length, 1, "a callback hotkey has no element to badge")
     assert.strictEqual(wh._hints.children[0].textContent, "Alt+b")
     assert.strictEqual(wh._hints.children[0].style.left, "10px")
@@ -143,7 +143,7 @@ test('showHints() badges the elements only, positioned absolutely', () => {
 
 test('destroy() takes the injected style away', () => {
     const wh = build()
-    wh.showHelp()
+    wh.toggleHelp(true)
     const style = wh._style
     assert.ok(head.children.includes(style))
     wh.destroy()
@@ -176,7 +176,7 @@ testAsync('clicking the combination records the new one and rebinds the hotkey',
     const wh = build()
     let fired = 0
     wh.grab("Alt+3", "Třetí", () => fired++)
-    wh.showHelp()
+    wh.toggleHelp(true)
     const [key, , reset] = findRow(wh, "Třetí").children
 
     key.onclick()
@@ -188,7 +188,7 @@ testAsync('clicking the combination records the new one and rebinds the hotkey',
     assert.strictEqual(reset.style.display, "", "the reset button showed up")
     assert.ok(key.focused, "the focus stays on the combination just changed")
 
-    wh.hideHelp()
+    wh.toggleHelp(false)
     wh.simulate("Alt+3")
     assert.strictEqual(fired, 0, "the default combination is free now")
     wh.simulate("Ctrl+j")
@@ -199,21 +199,21 @@ testAsync('clicking the combination records the new one and rebinds the hotkey',
         const wh = build()
         let fired = 0
         wh.grab("Alt+3", "Třetí", () => fired++)
-        wh.showHelp()
+        wh.toggleHelp(true)
         const [key] = findRow(wh, "Třetí").children
         key.onclick()
         dispatch({ key: "g", code: "KeyG" })
         dispatch({ key: "i", code: "KeyI" })
         await settle()
         assert.strictEqual(key.textContent, "g i")
-        wh.hideHelp()
+        wh.toggleHelp(false)
         wh.simulate("g i")
         assert.strictEqual(fired, 1)
         wh.destroy()
     }))
     .then(() => testAsync('Escape cancels the recording, it neither rebinds nor closes the dialog', async () => {
         const wh = build()
-        wh.showHelp()
+        wh.toggleHelp(true)
         const [key] = findRow(wh, "První").children
         key.onclick()
         dispatch({ key: "Escape", code: "Escape" })
@@ -224,7 +224,7 @@ testAsync('clicking the combination records the new one and rebinds the hotkey',
     }))
     .then(() => testAsync('the reset button puts the default combination back', async () => {
         const wh = build()
-        wh.showHelp()
+        wh.toggleHelp(true)
         const [key, , reset] = findRow(wh, "První").children
         key.onclick()
         dispatch({ key: "u", code: "KeyU", altKey: true })
@@ -234,12 +234,12 @@ testAsync('clicking the combination records the new one and rebinds the hotkey',
         assert.strictEqual(key.textContent, "Alt+1")
         assert.strictEqual(reset.style.display, "none")
         assert.ok(key.focused, "the reset button is gone now, the focus moved to the combination")
-        assert.deepEqual(wh.getRemapping(), {})
+        assert.deepEqual(wh.remapping(), {})
         wh.destroy()
     }))
     .then(() => testAsync('remapping onto a taken combination marks the row', async () => {
         const wh = build()
-        wh.showHelp()
+        wh.toggleHelp(true)
         const row = findRow(wh, "První")
         row.children[0].onclick()
         dispatch({ key: "2", code: "Digit2", altKey: true }) // "Druhá" holds Alt+2
@@ -252,7 +252,7 @@ testAsync('clicking the combination records the new one and rebinds the hotkey',
 test('remap: false keeps the plain, non-clickable list', () => {
     const wh = new WebHotkeys({ observe: false, replaceAccesskeys: false, mac: false, remap: false })
     wh.grab("Alt+1", "První", () => { })
-    wh.showHelp()
+    wh.toggleHelp(true)
     const row = wh._help.querySelectorAll(".webhotkeys-row")[1]
     assert.strictEqual(row.children[0].tagName, "KBD")
     assert.strictEqual(row.children.length, 2, "no reset button")

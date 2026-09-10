@@ -49,6 +49,20 @@
     </section>
 
     <section>
+        <h2>Arrow keys inside a text field</h2>
+        <p>Type into the box, then hit <kbd>↓</kbd>/<kbd>↑</kbd> to move through the suggestions below it - normally
+            an arrow key inside a text field only moves the caret, <code>{inInput: true}</code> unlocks it.</p>
+        <div id="combo">
+            <input id="combo-input" placeholder="type anything, then press ↓">
+            <ul id="combo-list">
+                <li>Apple</li>
+                <li>Banana</li>
+                <li>Cherry</li>
+            </ul>
+        </div>
+    </section>
+
+    <section>
         <h2>Remapping</h2>
         <p><kbd id="remappable">Alt+r</kbd> shows an alert. Hit <kbd>F1</kbd> and click any combination there to press
             your own – a whole sequence works too (type <kbd>g</kbd> <kbd>i</kbd> and pause). The layout is kept in the
@@ -64,9 +78,8 @@
 
     <script>
         const wh = window.webHotkeys
-        // the `hintKey` option does the same when passed to the constructor
+        // F1 (help) and F2 (badge the elements having a hotkey) are grabbed by default
         wh.setOptions({ onMiss: e => log(`miss: ${e.key}`) })
-        wh.grab("F2", "Badge the elements having a hotkey", () => wh.toggleHints())
 
         // plain combinations
         wh.grab("Digit1", "Digit 1, whatever the keyboard layout", () => alert("Digit1 hit"))
@@ -82,16 +95,23 @@
             ["Shift Shift", "Double tap", () => alert("Shift tapped twice")],
         ])
 
-        // a hotkey that survives a text field
-        wh.grab("Escape", "Leave the text field", () => document.activeElement.blur()).allowInInput()
+        // Escape already fires inside a text field (it is not one of the guarded navigation/editing
+        // keys), no `inInput` needed here
+        wh.grab("Escape", "Leave the text field", () => document.activeElement.blur())
 
-        // the list helper
-        wh.list("ul#tracks li")
-            .setCurrentSelector(".active")
-            .setWrap()
-            .handleUpDown()
-            .handleHomeEnd()
-            .handleTypeahead()
+        // the list helper (a WebHotkeys instance handles a single `list()` at a time)
+        wh.list("ul#tracks li", { current: ".active", wrap: true, upDown: true, homeEnd: true, typeahead: true })
+
+        // a combobox: arrow keys navigate the suggestion list without leaving the input.
+        // Plain DOM code (not `list()`, already busy with #tracks above) - move `.active` a step.
+        const comboStep = dir => {
+            const items = [...document.querySelectorAll("#combo-list li")]
+            const i = Math.max(items.findIndex(li => li.classList.contains("active")) + dir, 0)
+            items.forEach(li => li.classList.remove("active"))
+            items[Math.min(i, items.length - 1)]?.classList.add("active")
+        }
+        wh.grab("ArrowDown", "Next suggestion", () => comboStep(1), { scope: "#combo", inInput: true })
+        wh.grab("ArrowUp", "Previous suggestion", () => comboStep(-1), { scope: "#combo", inInput: true })
 
         // remapping
         const remappable = wh.grab("Alt+r", "A remappable hotkey", () => alert("The remappable hotkey hit"))
@@ -106,7 +126,7 @@
             wh.record(combination => {
                 remappable.rebind(combination)
                 refresh()
-                log(`Rebound to ${remappable.getClue()}`)
+                log(`Rebound to ${remappable.clue}`)
             })
         }
 
@@ -115,7 +135,7 @@
         }
         function refresh() {
             document.getElementById("hint").innerHTML = wh.getText().split("\n").join("<br>")
-            document.getElementById("remappable").textContent = remappable.getClue()
+            document.getElementById("remappable").textContent = remappable.clue
         }
         document.addEventListener("DOMContentLoaded", refresh) // wait for the [data-hotkey] to be registered
     </script>

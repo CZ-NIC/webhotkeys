@@ -17,11 +17,11 @@ export type KeyEvent = Partial<KeyboardEvent>
 export interface WebHotkeysOptions {
     /** Append the shortcut text to the element `title`, to its text (its label for a form element), or nowhere. */
     hint?: "title" | "text" | false
-    /** Put the help under F1. */
-    grabF1?: boolean
+    /** Combination that opens the help. `null` grabs nothing. */
+    helpKey?: Key | null
     /** How the help is displayed. The dialog falls back to an alert when the DOM is unavailable. */
     help?: "dialog" | "alert"
-    /** Combination toggling the visual badges over every element having a hotkey. Ex: "F2". */
+    /** Combination toggling the visual badges over every element having a hotkey. `null` grabs nothing. */
     hintKey?: Key | null
     /** Convert the `[accesskey]` elements to hotkeys. */
     replaceAccesskeys?: boolean
@@ -65,19 +65,17 @@ export declare class Hotkey {
     event: KeyEvent
     element: HTMLElement | null
     enabled: boolean
-    /** Fires even while the user is typing. @see allowInInput */
+    /** Fires even while the user is typing. Set via `grab(..., {inInput: true})`, or directly. */
     allowInput: boolean
     /** The combination the hotkey was grabbed with; survives `rebind`. */
     defaultCombination: Key
 
     /** Text representation of the combination, ex: "Ctrl+k" (or "⌘k" on a Mac). */
-    getClue(appendParenthesis?: boolean): string
+    readonly clue: string
     /** Platform independent definition string, ex: "Ctrl+k". */
-    getCombination(): Key
+    readonly combination: Key
     /** "Ctrl+k: Hint text" */
-    getText(): string
-    /** Fire even inside an input / contenteditable. */
-    allowInInput(allow?: boolean): this
+    readonly text: string
     /** Move the hotkey to another combination (user remapping). No argument = back to the default. */
     rebind(combination?: Key | null): this
     enable(): this
@@ -98,24 +96,68 @@ export declare class HotkeyGroup extends Array<Hotkey> {
     remove(): this
 }
 
+export interface ListOptions {
+    /** Selector describing the currently selected item. @default ":focus" */
+    current?: string
+    /** Injected via the internal `_insertCss` as `query + current + css`. */
+    css?: string | null
+    /** Jump from the last item to the first one and back. @default false */
+    wrap?: boolean
+    /** Scroll the newly selected item into the view. @default true */
+    scroll?: boolean
+    /** Called with (newEl, oldEl) before the change; returning `false` cancels it. */
+    onChange?: ((newEl: HTMLElement, oldEl: HTMLElement | null) => boolean | void) | null
+    /** Called with (newEl) once the change has happened. */
+    onChanged?: ((newEl: HTMLElement) => void) | null
+    /** Grab ArrowUp/ArrowDown for this listing. @default false */
+    upDown?: boolean
+    /** Grab Home/End for this listing. @default false */
+    homeEnd?: boolean
+    /** `true` uses an 800 ms timeout, a number sets a custom one (ms). @default false */
+    typeahead?: boolean | number
+    /** Restricts the upDown/homeEnd grabs - give each list a distinct scope so several lists on
+     *  the same page don't fight over the arrow keys. */
+    scope?: Scope | null
+}
+
 export declare class HotkeyList {
-    setQuery(query: string): this
-    setCurrentSelector(currentSelector: string, css?: string | null): this
-    setChangeFn(method: (newEl: HTMLElement, oldEl: HTMLElement) => boolean): this
-    setCallback(method: (newEl: HTMLElement) => void): this
-    setWrap(wrap?: boolean): this
-    setScroll(scroll?: boolean): this
-    handleUpDown(): this
-    handleHomeEnd(): this
-    handleTypeahead(timeout?: number): this
     selectByPrefix(prefix: string): boolean
-    getCurrent(): HTMLElement | null
-    setCurrent(el: HTMLElement): this
+    /** The currently selected element (even if it changed since the last `go*` call). */
+    current: HTMLElement | null
     goNext(steps?: number): boolean
     goPrev(steps?: number): boolean
     goFirst(): boolean
     goLast(): boolean
     go(forward?: boolean, steps?: number): boolean
+    destroy(): this
+}
+
+export interface GridOptions {
+    /** Selector describing the currently selected cell. @default ":focus" */
+    current?: string
+    /** Wrap around row/column edges instead of stopping there. @default false */
+    wrap?: boolean
+    /** Scroll the newly selected cell into the view. @default true */
+    scroll?: boolean
+    /** Called with (newEl, oldEl) before the change; returning `false` cancels it. */
+    onChange?: ((newEl: HTMLElement, oldEl: HTMLElement | null) => boolean | void) | null
+    /** Called with (newEl) once the change has happened. */
+    onChanged?: ((newEl: HTMLElement) => void) | null
+    /** Restricts the Up/Down/Left/Right grabs - give each grid a distinct scope so several
+     *  tables on the same page don't fight over the arrow keys. */
+    scope?: Scope | null
+}
+
+export declare class HotkeyGrid {
+    /** Move to the same column in the row above, clamping the column to that row's width. */
+    goUp(steps?: number): boolean
+    /** Move to the same column in the row below, clamping the column to that row's width. */
+    goDown(steps?: number): boolean
+    /** Move to the previous cell within the current row. */
+    goLeft(steps?: number): boolean
+    /** Move to the next cell within the current row. */
+    goRight(steps?: number): boolean
+    /** Detach the Up/Down/Left/Right grabs. */
     destroy(): this
 }
 
@@ -128,9 +170,13 @@ export declare class WebHotkeys {
     destroy(): this
 
     grab(hotkey: Key, action: Action): Hotkey
-    grab(hotkey: Key, hint: string, action: Action, scope?: Scope | null): Hotkey
-    group(name: string, definitions?: Array<[Key, string | Action, Action?, (Scope | null)?]>): HotkeyGroup
-    list(query: string, currentSelector?: string | null, changeFn?: Function | null, handleUpDown?: boolean): HotkeyList
+    grab(hotkey: Key, hint: string, action: Action, scope?: Scope | { scope?: Scope | null, inInput?: boolean } | null): Hotkey
+    group(name: string, definitions?: Array<[Key, string | Action, Action?, (Scope | { scope?: Scope | null, inInput?: boolean } | null)?]>): HotkeyGroup
+    /** Every call returns its own independent instance, so several lists can coexist on one page. */
+    list(query?: string, options?: ListOptions): HotkeyList
+    /** 2D keyboard navigation over a table (rows × cells within a row). Unlike `list()`, every call
+     *  returns its own independent instance, so several tables can coexist on one page. */
+    grid(rowQuery: string, cellQuery: string, options?: GridOptions): HotkeyGrid
 
     /** Manually fire a combination or a whole sequence. */
     simulate(hotkey: Key | KeyEvent): boolean | undefined
@@ -149,25 +195,22 @@ export declare class WebHotkeys {
             onProgress?: ((this: WebHotkeys, partial: Key, event: KeyboardEvent) => void) | null
         }
     ): () => void
-    /** The user changes: the default combination -> the current one. */
-    getRemapping(): Record<Key, Key>
-    /** The full remapping state; a hotkey missing from the map returns to its default combination.
-     *  An entry that is not a key combination is dropped - the map may come from the outside. */
-    applyRemapping(map: Record<Key, Key>): this
-    /** Only needed when the `remap` option is off. */
-    persistRemapping(storageKey?: string): this
+    /** Get the user changes: the default combination -> the current one. */
+    remapping(): Record<Key, Key>
+    /** Apply the full remapping state; a hotkey missing from the map returns to its default combination.
+     *  `null`/`{}` clears every remapping. An entry that is not a key combination is dropped - the
+     *  map may come from the outside. */
+    remapping(map: Record<Key, Key> | null): this
 
-    showHelp(): this
-    hideHelp(): this
-    showHints(): this
-    hideHints(): this
-    toggleHints(): this
+    /** Toggle the help dialog. `null` toggles, true/false forces the state. */
+    toggleHelp(show?: boolean | null): this
+    /** Toggle the visual hint badges over the elements having a hotkey. `null` toggles, true/false forces the state. */
+    toggleHints(show?: boolean | null): this
 
     /** The focused element, piercing the shadow DOM. */
     activeElement(): HTMLElement | null
     isMac(): boolean
     getSheet(): CSSStyleSheet
-    insertCss(cssRule: string): void
 }
 
 export default WebHotkeys

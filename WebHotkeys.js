@@ -3,9 +3,9 @@
  *
  * @typedef {Object} WebHotkeysDefaults
  * @property {string|boolean} [hint='title'] Values: 'title', 'text', false. Append shorcut text to the element title (ex: 'anchor (Alt+1)') or its text (or its label for the case of a form element).
- * @property {boolean} [grabF1=true] Put basic help text under F1
- * @property {string|boolean} [help='dialog'] Values: 'dialog', 'alert'. How the F1 help is displayed. The dialog falls back to the alert when the DOM is not available.
- * @property {?Key} [hintKey=null] Key combination that toggles the visual badges over all the elements having a hotkey. Ex: 'F2'.
+ * @property {?Key} [helpKey='F1'] Key combination that opens the help. `null` grabs nothing.
+ * @property {string|boolean} [help='dialog'] Values: 'dialog', 'alert'. How the help is displayed. The dialog falls back to the alert when the DOM is not available.
+ * @property {?Key} [hintKey='F2'] Key combination that toggles the visual badges over all the elements having a hotkey. `null` grabs nothing.
  * @property {boolean} [replaceAccesskeys=true] If true, [accesskey] elements will be converted to hotkeys.
  * @property {boolean} [observe=true] Monitors DOM changes. Automatically un/grab hotkeys as DOM elements with the given selector dis/appear.
  * @property {?function} [onToggle]  When having a DOM element linked, run this callback on hotkey toggle. This will be set to the hotkey, first parameter being the element, second boolean whether it got enabled.
@@ -17,12 +17,12 @@
  * @property {?string|?function} [ignore=null]  Selector or callback(activeElement, event). When it matches, no hotkey is triggered at all.
  * @property {number} [sequenceTimeout=1000]  Milliseconds a key sequence ('g i') may be spread over. Also how long the F1 dialog waits before committing a recorded sequence.
  * @property {boolean|string} [remap=true]  The F1 dialog lets the user click a combination and press their own. A string is used as the localStorage key (true means 'webhotkeys.remap'), false turns the editing off.
- * @property {?function} [onRemap]  Called with the remapping object whenever the user changes a combination. Handy to store the layout on the server. @see getRemapping
+ * @property {?function} [onRemap]  Called with the remapping object whenever the user changes a combination. Handy to store the layout on the server. @see remapping
  * @property {?boolean} [mac=null]  Display the combinations with the macOS symbols (⌘⌥⇧⌃) and resolve the 'Mod' modifier to Meta. Null means autodetect.
  * @property {boolean} [warnConflicts=false]  Console warn when a newly grabbed hotkey shadows an existing scope-less one.
  */
 const WebHotkeysDefaults = {
-    replaceAccesskeys: true, grabF1: true, help: "dialog", hintKey: null,
+    replaceAccesskeys: true, helpKey: "F1", help: "dialog", hintKey: "F2",
     selector: "data-hotkey", selectorGroup: "data-hotkey-group", selectorAction: "data-hotkey-action",
     observe: true, onToggle: null, onTrigger: null, onMiss: null, hint: "title",
     ignore: null, sequenceTimeout: 1000, mac: null, warnConflicts: false,
@@ -96,7 +96,7 @@ class Hotkey {
         /** @type {boolean} Fire even when the user is typing into an input. @see allowInput */
         this.allowInput = false
         /** @type {string} The combination the hotkey was grabbed with. Survives `rebind`, hence remapping. */
-        this.defaultCombination = this.getCombination()
+        this.defaultCombination = this.combination
         /** @type {?HTMLElement} The hotkey is linked to this DOM element. */
         const el = this.element = action instanceof HTMLElement ? action : null
         wh._all.add(this)
@@ -117,7 +117,7 @@ class Hotkey {
         if (!el || !opt.hint) {
             return
         }
-        const clue = this.getClue()
+        const clue = this.clue
         // Stores *which* hotkey's clue was last hinted (not just a boolean), as a
         // data-* attribute so it survives el.cloneNode()/$.clone(). A clone kept
         // with the SAME hotkey (ex: zoom.js's `replace()` re-clones #nav-Close with
@@ -145,26 +145,25 @@ class Hotkey {
     }
 
     /**
-    * Get hotkey combination for the text representation. Uses the macOS symbols when applicable.
+    * Hotkey combination for the text representation. Uses the macOS symbols when applicable.
     * @returns {string}
     */
-    getClue(append_parenthesis = false) {
-        const clue = this.sequence.map(e => Hotkey.comboText(e, this.wh?.isMac())).join(" ")
-        return append_parenthesis ? ` (${clue})` : clue
+    get clue() {
+        return this.sequence.map(e => Hotkey.comboText(e, this.wh?.isMac())).join(" ")
     }
 
     /**
-     * Get the canonical, platform independent definition string. `wh.grab(hotkey.getCombination(), …)`
-     * grabs the very same combination. Unlike `getClue`, it never uses the macOS symbols.
+     * The canonical, platform independent definition string. `wh.grab(hotkey.combination, …)`
+     * grabs the very same combination. Unlike `clue`, it never uses the macOS symbols.
      * @returns {Key}
      */
-    getCombination() {
+    get combination() {
         return this.sequence.map(e => Hotkey.comboText(e, false)).join(" ")
     }
 
-    /** Get text representation. */
-    getText() {
-        return `${this.getClue()}: ${this.hint}`
+    /** Text representation. @returns {string} */
+    get text() {
+        return `${this.clue}: ${this.hint}`
     }
 
     /**
@@ -241,16 +240,6 @@ class Hotkey {
         return Hotkey.mod_state(spec, oneChar && !/[A-Za-z]/.test(e.key)) === Hotkey.mod_state(e, oneChar && !/[A-Za-z]/.test(e.key))
     }
 
-    /** Fire even when the user is typing into an input or a contenteditable.
-     * Ex: `wh.grab("Escape", "Close", close).allowInInput()`
-     * @param {boolean} allow
-     * @returns {Hotkey}
-     */
-    allowInInput(allow = true) {
-        this.allowInput = allow
-        return this
-    }
-
     /**
      * Move the hotkey to another combination, ex. because the user remapped it.
      * @param {?Key} combination Nothing (or null) puts the hotkey back to its default combination.
@@ -259,7 +248,7 @@ class Hotkey {
      */
     rebind(combination = null, store = true) {
         const was = this.enabled
-        const previousClue = this.getClue()
+        const previousClue = this.clue
         this.disable()
         this.sequence = this.wh._parseSequence(combination || this.defaultCombination)
         this.event = this.sequence[this.sequence.length - 1]
@@ -268,7 +257,7 @@ class Hotkey {
             this.enable()
         }
         if (store) {
-            const current = this.getCombination()
+            const current = this.combination
             if (current === this.defaultCombination) {
                 delete this.wh._remap[this.defaultCombination]
             } else {
@@ -385,6 +374,8 @@ class WebHotkeys {
         this._remap = Object.create(null)
         /** @type {?function} Set while `record` waits for a keystroke; the hotkeys stay silent meanwhile. */
         this._recording = null
+        /** @type {_List[]} Every `list()` instance, so `destroy()` can detach their typeahead listeners too. */
+        this._lists = []
 
         // Object.create(null) (not {}) because the group name is an arbitrary string coming from
         // [data-hotkey-group] in the DOM. A group named e.g. "constructor" or "__proto__" would otherwise
@@ -424,8 +415,8 @@ class WebHotkeys {
             })
         }
 
-        if (options.grabF1) {
-            this.grab("F1", "Help", () => this.showHelp())
+        if (options.helpKey) {
+            this.grab(options.helpKey, "Help", () => this.toggleHelp())
         }
         if (options.hintKey) {
             this.grab(options.hintKey, "Show the hotkeys over the page", () => this.toggleHints())
@@ -486,9 +477,10 @@ class WebHotkeys {
         document.removeEventListener("keydown", this._listener, true)
         this._observer?.disconnect()
         this._recording?.()
-        this.hideHelp()
-        this.hideHints()
-        this._list?.destroy()
+        this._hideHelp()
+        this._hideHints()
+        this._lists.forEach(list => list.destroy())
+        this._lists = []
         Array.from(this._all).forEach(hotkey => hotkey.remove())
         this._hotkeys = Object.create(null)
         this._groups = Object.create(null)
@@ -553,7 +545,7 @@ class WebHotkeys {
      */
     getText() {
         return this.getGroups()
-            .map(({ name, hotkeys }) => (name ? `\n**${name}**\n` : "") + hotkeys.map(h => h.getText()).join("\n"))
+            .map(({ name, hotkeys }) => (name ? `\n**${name}**\n` : "") + hotkeys.map(h => h.text).join("\n"))
             .join("\n").trim()
     }
 
@@ -565,7 +557,7 @@ class WebHotkeys {
     getConflicts() {
         const map = new Map()
         this.getHotkeys().filter(hotkey => !hotkey.scope).forEach(hotkey => {
-            const key = hotkey.getCombination()
+            const key = hotkey.combination
             map.set(key, [...(map.get(key) || []), hotkey])
         })
         return Array.from(map).filter(([, hotkeys]) => hotkeys.length > 1)
@@ -573,18 +565,21 @@ class WebHotkeys {
     }
 
     /**
-     * .grab(hotkey, [hint], action, [scope])
+     * .grab(hotkey, [hint], action, [scope|options])
      *
      * @param {Key} hotkey Key combination to be grabbed. Ex: 'Alt+a', 'Ctrl+PageDown', 'g i' (a sequence).
      * @param {string|Action} hintOrAction Either hint text or an action (if the action parameter stays undefined).
      * @param {Action} action  What will happen on hotkey trigger.
      *   If action returns false, hotkey will be treated as non-existent and event will propagate further.
      *   If action is a HTMLElement or its string selector, its click or focus method (form elements) is invoked instead.
-     * @param {?Action} scope Scope within the hotkey is allowed to be launched.
+     * @param {?Action|{scope: ?Action, inInput: ?boolean}} scope Scope within the hotkey is allowed to be launched,
+     *  or an options object `{scope, inInput}`.
      *  The scope can be an HTMLElement that the active element is being search under when the hotkey triggers.
      *  The scope can an HTMLElement selector, does not have to exist at the shorcut definition time.
      *  The scope can be a function, resolved at the keystroke time. True means the scope matches. That way, you can implement negative scope.
      *  (Ex: down arrow should work unless there is DialogOverlay in the document root.)
+     *  `inInput: true` fires the hotkey even while the user is typing into an input or a contenteditable
+     *  (ex: arrow keys navigating a combobox's suggestion list). @see Hotkey.allowInput
      * @returns {Hotkey}
      */
     grab(hotkey, hintOrAction, action, scope = null) {
@@ -592,6 +587,14 @@ class WebHotkeys {
         if (action === undefined) {  // action parameter was not used - shift the others
             action = hintOrAction
             hintOrAction = ""
+        }
+        let inInput = false
+        // An options object `{scope, inInput}`, not a plain scope. Checked by prototype chain depth,
+        // not `typeof` (an HTMLElement/selector-result is an object too) nor `=== Object.prototype`
+        // (breaks across realms, ex: a test running WebHotkeys.js inside a `vm` context).
+        if (scope && typeof scope === "object" && Object.getPrototypeOf(Object.getPrototypeOf(scope) ?? {}) === null) {
+            inInput = scope.inInput ?? false
+            scope = scope.scope ?? null
         }
         let error = !hotkey || !action
         if (isString(action)) {
@@ -607,11 +610,12 @@ class WebHotkeys {
         }
         // register hotkey and set the hint to the DOM
         const hotkeyO = new Hotkey(action, hintOrAction, scope, this._parseSequence(hotkey), this)
+        hotkeyO.allowInput = inInput
 
         // The user may have remapped this very combination in a previous session (or in another
         // view that has been unmounted since) – honour it right away, before anyone sees the hint.
         const remapped = this._remap[hotkeyO.defaultCombination]
-        if (remapped && remapped !== hotkeyO.getCombination()) {
+        if (remapped && remapped !== hotkeyO.combination) {
             hotkeyO.rebind(remapped, false)
         }
 
@@ -627,10 +631,12 @@ class WebHotkeys {
             }
         }
         if (this.options.warnConflicts) {
-            const conflict = this.getConflicts().find(c => c.combination === hotkeyO.getCombination())
-            if (conflict) {
-                console.warn(`WebHotkeys.js> ${conflict.combination} is grabbed ${conflict.hotkeys.length}x:`,
-                    conflict.hotkeys.map(h => h.hint || h.action))
+            // Cheap: only scan the bucket this very hotkey landed in, not every grabbed hotkey.
+            const combination = hotkeyO.combination
+            const conflict = hotkeyO.registry.filter(h => !h.scope && h.combination === combination)
+            if (conflict.length > 1) {
+                console.warn(`WebHotkeys.js> ${combination} is grabbed ${conflict.length}x:`,
+                    conflict.map(h => h.hint || h.action))
             }
         }
         return hotkeyO
@@ -748,22 +754,28 @@ class WebHotkeys {
     }
 
     /**
-     * The user changes, ex: {"Ctrl+KeyS": "Ctrl+KeyD"} (original combination -> current one).
-     * Ready to be sent to the server; feed it back with `applyRemapping`.
-     * @returns {Object.<Key, Key>}
+     * Get or set the user's remapping (original combination -> the current one).
+     *
+     * `remapping()` returns a copy, ex: {"Ctrl+KeyS": "Ctrl+KeyD"}. Ready to be sent to the server.
+     * `remapping(map)` applies the full state – a hotkey missing from the map goes back to its
+     * default combination; `null`/`{}` clears every remapping. Storage (localStorage, `onRemap`)
+     * is governed solely by the `remap` option.
+     * @param {Object.<Key, Key>} [map]
+     * @returns {Object.<Key, Key>|WebHotkeys}
      */
-    getRemapping() {
-        return { ...this._remap }
+    remapping(map) {
+        if (arguments.length === 0) {
+            return { ...this._remap }
+        }
+        this._applyRemapping(map, true)
+        return this
     }
 
     /**
-     * Put the hotkeys where the map says. This is the full state – a hotkey missing from the map
-     * goes back to its default combination.
-     * @param {Object.<Key, Key>} map @see getRemapping
-     * @param {boolean} store Persist the map further on (localStorage, `onRemap`). Internal use.
-     * @returns {WebHotkeys}
+     * @param {?Object.<Key, Key>} map
+     * @param {boolean} store Persist the map further on (localStorage, `onRemap`).
      */
-    applyRemapping(map, store = true) {
+    _applyRemapping(map, store) {
         this._remap = Object.create(null)
         const rejected = []
         Object.entries(map || {}).forEach(([from, to]) => {
@@ -778,25 +790,13 @@ class WebHotkeys {
         }
         this.getHotkeys(false).forEach(hotkey => {
             const target = this._remap[hotkey.defaultCombination] || hotkey.defaultCombination
-            if (target !== hotkey.getCombination()) {
+            if (target !== hotkey.combination) {
                 hotkey.rebind(target, false)
             }
         })
         if (store) {
             this._saveRemapping()
         }
-        return this
-    }
-
-    /**
-     * Load the remapping from the localStorage and keep it saved there on every further `rebind`.
-     * Not needed unless you changed the `remap` option – it is the default behaviour.
-     * @param {string} storageKey Kept at the 0.10 default, the `remap` option uses 'webhotkeys.remap'.
-     * @returns {WebHotkeys}
-     */
-    persistRemapping(storageKey = "webhotkeys") {
-        this._storageKey = storageKey
-        return this._loadRemapping()
     }
 
     /** @returns {WebHotkeys} */
@@ -823,15 +823,15 @@ class WebHotkeys {
             this._storageKey = null
             return this
         }
-        this.applyRemapping(map, false)
+        this._applyRemapping(map, false)
         return this
     }
 
     _saveRemapping() {
-        this.options.onRemap?.call(this, this.getRemapping())
+        this.options.onRemap?.call(this, this.remapping())
         if (this._storageKey && typeof localStorage !== "undefined") {
             try {
-                localStorage.setItem(this._storageKey, JSON.stringify(this.getRemapping()))
+                localStorage.setItem(this._storageKey, JSON.stringify(this.remapping()))
             } catch (e) {
                 console.warn("WebHotkeys.js> Cannot store the remapping", e)
             }
@@ -842,32 +842,56 @@ class WebHotkeys {
      * Looping over the items (yt tracks list, fb notification list...)
      * ∀ page can use this list helper that handles different sorts of menus.
      *
-     * @param {String} query DOM selector of li or anchors
-     * @param {String} currentSelector The part of selector, describing currently selected item. If not defined or null, the default is: ":focus".
-     * @param {fn} changeFn Visitor called on change (when we go next or back). Receives (newEl, oldEl) and returns true if we should continue (and change currentSelector of the newEl and oldElement).
-     * @param {boolean} handleUpDown If true, UP and DOWN key are bound to this item listing.
+     * @param {String} [query='div'] DOM selector of li or anchors
+     * @param {ListOptions} [options]
+     * @param {String} [options.current=':focus'] Selector describing the currently selected item.
+     * @param {?String} [options.css=null] Injected via `wh._insertCss` as `query + current + css`.
+     * @param {boolean} [options.wrap=false] Jump from the last item to the first one and back.
+     * @param {boolean} [options.scroll=true] Scroll the newly selected item into the view.
+     * @param {?function} [options.onChange=null] Called with (newEl, oldEl) before the change; returning
+     *  false cancels it.
+     * @param {?function} [options.onChanged=null] Called with (newEl) once the change has happened.
+     * @param {boolean} [options.upDown=false] Grab ArrowUp/ArrowDown for this listing.
+     * @param {boolean} [options.homeEnd=false] Grab Home/End for this listing.
+     * @param {boolean|number} [options.typeahead=false] Enable typing the first letters of an item to
+     *  select it; `true` uses an 800 ms timeout, a number sets a custom one (ms).
+     * @param {?Action} [options.scope=null] Restricts the upDown/homeEnd grabs, @see WebHotkeys.grab.
+     *  Give each list a distinct scope so several lists on the same page don't fight over the arrow keys.
      * @returns {_List}
      *
-     * @example wh.list("ul#list li, #div a").handleUpDown() will cycle amongst li-s and a-s at once, using the default (:focus) selector.
+     * @example wh.list("ul#list li, #div a", { upDown: true }) cycles amongst li-s and a-s at once, using the default (:focus) selector.
      */
-    list(query, currentSelector = null, changeFn = null, handleUpDown = false) {
-        if (typeof this._list === "undefined") {
-            // constructor
-            this._list = new _List(query, currentSelector, changeFn, this);
-        }
-        if (typeof query !== "undefined") {
-            this._list.setQuery(query);
-        }
-        if (currentSelector) {
-            this._list.setCurrentSelector(currentSelector);
-        }
-        if (changeFn) {
-            this._list.setChangeFn(changeFn);
-        }
-        if (handleUpDown) {
-            this._list.handleUpDown();
-        }
-        return this._list;
+    list(query, options = {}) {
+        const list = new _List(this)
+        list._configure(query, options)
+        this._lists.push(list)
+        return list;
+    }
+
+    /**
+     * 2D keyboard navigation over a table (rows × cells within a row) - Up/Down keep the column and
+     * move between rows, Left/Right move between cells of the current row.
+     *
+     * Unlike `list()`, every call returns its own independent instance (no shared caching), so
+     * several tables can coexist on the same page - give each a distinct `scope` so their arrow
+     * keys do not fight over the focus.
+     *
+     * @param {String} rowQuery DOM selector for the rows, ex: `"table.dbtable tr"`.
+     * @param {String} cellQuery DOM selector for the cells within a row, ex: `"td"`.
+     * @param {GridOptions} [options]
+     * @param {String} [options.current=':focus'] Selector describing the currently selected cell.
+     * @param {boolean} [options.wrap=false] Wrap around row/column edges instead of stopping there.
+     * @param {boolean} [options.scroll=true] Scroll the newly selected cell into the view.
+     * @param {?function} [options.onChange=null] Called with (newEl, oldEl) before the change; returning
+     *  false cancels it.
+     * @param {?function} [options.onChanged=null] Called with (newEl) once the change has happened.
+     * @param {?Action} [options.scope=null] Restricts the Up/Down/Left/Right grabs, @see WebHotkeys.grab.
+     * @returns {_Grid}
+     *
+     * @example const rows = wh.grid("table.dbtable tr", "td", { scope: "table.dbtable", wrap: true })
+     */
+    grid(rowQuery, cellQuery, options = {}) {
+        return new _Grid(this, rowQuery, cellQuery, options)
     }
 
     /**
@@ -970,13 +994,13 @@ class WebHotkeys {
         }
         if (this._help?.open) { // the help dialog swallows the page hotkeys
             if (["Escape", "F1"].some(key => e.key === key || e.code === key)) {
-                this.hideHelp()
+                this._hideHelp()
                 e.preventDefault?.()
                 e.stopPropagation?.()
             }
             return
         }
-        this.hideHints() // any keystroke dismisses the badges (the hotkey below still runs)
+        this._hideHints() // any keystroke dismisses the badges (the hotkey below still runs)
 
         const active = this.activeElement()
         const { ignore } = this.options
@@ -1075,9 +1099,9 @@ class WebHotkeys {
      */
     simulate(hotkey) {
         if (hotkey.constructor === String) {
-            return this._parseSequence(hotkey).map(event => this._trigger(event)).pop()
+            return this._parseSequence(hotkey).map(event => this._trigger(completeSimulatedEvent(event))).pop()
         }
-        return this._trigger(hotkey)
+        return this._trigger(completeSimulatedEvent(hotkey))
     }
 
     //
@@ -1085,16 +1109,22 @@ class WebHotkeys {
     //
 
     /**
-     * Show the hotkey list. Uses a modal dialog, falls back to an alert.
+     * Toggle the help dialog. Uses a modal dialog, falls back to an alert.
+     * @param {?boolean} show `null` toggles, true/false forces the state.
      * @returns {WebHotkeys}
      */
-    showHelp() {
+    toggleHelp(show = null) {
+        return (show ?? !this._help?.open) ? this._showHelp() : this._hideHelp()
+    }
+
+    /** @returns {WebHotkeys} */
+    _showHelp() {
         const dialog = this.options.help === "dialog" && createEl("dialog")
         if (!dialog?.showModal) {
             typeof alert === "function" ? alert(this.getText()) : console.log(this.getText())
             return this
         }
-        this.hideHelp()
+        this._hideHelp()
         this._injectStyle()
         dialog.className = "webhotkeys-dialog"
 
@@ -1105,7 +1135,7 @@ class WebHotkeys {
         filter.placeholder = "Filter…"
         const close = createEl("button", "webhotkeys-close", head)
         close.textContent = "✕"
-        close.onclick = () => this.hideHelp()
+        close.onclick = () => this._hideHelp()
 
         const body = createEl("div", "webhotkeys-body", dialog)
         this.getGroups().forEach(({ name, hotkeys }) => {
@@ -1115,7 +1145,7 @@ class WebHotkeys {
             hotkeys.forEach(hotkey => {
                 const row = createEl("div", "webhotkeys-row", body)
                 const key = createEl(this.options.remap ? "button" : "kbd", "webhotkeys-key", row)
-                key.textContent = hotkey.getClue()
+                key.textContent = hotkey.clue
                 createEl("span", "webhotkeys-hint", row).textContent = hotkey.hint
                 if (this.options.remap) {
                     this._makeEditable(row, key, hotkey)
@@ -1134,7 +1164,7 @@ class WebHotkeys {
 
         document.body.appendChild(dialog)
         this._help = dialog
-        dialog.addEventListener("close", () => this.hideHelp())
+        dialog.addEventListener("close", () => this._hideHelp())
         // Escape while recording belongs to the recording, not to the dialog. Our keydown listener
         // cannot stop this one – the browser closes a <dialog> through the 'cancel' event.
         dialog.addEventListener("cancel", e => this._recording && e.preventDefault?.())
@@ -1157,12 +1187,12 @@ class WebHotkeys {
 
         /** @param {boolean} keepFocus Stay on the button the user has just used, ready for another go. */
         const refresh = (keepFocus = false) => {
-            key.textContent = hotkey.getClue()
+            key.textContent = hotkey.clue
             key.className = "webhotkeys-key"
-            const changed = hotkey.getCombination() !== hotkey.defaultCombination
+            const changed = hotkey.combination !== hotkey.defaultCombination
             reset.style.display = changed ? "" : "none"
             // The whole list is right here – tell the user straight away that somebody else has the key.
-            const clash = this.getConflicts().find(c => c.combination === hotkey.getCombination())
+            const clash = this.getConflicts().find(c => c.combination === hotkey.combination)
             row.className = "webhotkeys-row" + (clash ? " webhotkeys-clash" : "")
             key.title = clash
                 ? `Also used by: ${clash.hotkeys.filter(h => h !== hotkey).map(h => h.hint).join(", ")}`
@@ -1202,7 +1232,7 @@ class WebHotkeys {
     }
 
     /** @returns {WebHotkeys} */
-    hideHelp() {
+    _hideHelp() {
         this._recording?.()
         if (this._help) {
             const dialog = this._help
@@ -1217,11 +1247,11 @@ class WebHotkeys {
      * Badge every visible element having a hotkey with its combination, the Vimium way.
      * @returns {WebHotkeys}
      */
-    showHints() {
+    _showHints() {
         if (typeof document === "undefined" || !document.body) {
             return this
         }
-        this.hideHints()
+        this._hideHints()
         this._injectStyle()
         const layer = createEl("div", "webhotkeys-hints")
         this.getHotkeys().forEach(hotkey => {
@@ -1234,20 +1264,20 @@ class WebHotkeys {
                 return
             }
             const badge = createEl("kbd", "webhotkeys-badge", layer)
-            badge.textContent = hotkey.getClue()
+            badge.textContent = hotkey.clue
             badge.style.left = `${rect.left + window.scrollX}px`
             badge.style.top = `${rect.top + window.scrollY}px`
         })
         document.body.appendChild(layer)
         this._hints = layer
-        this._dismissHints = () => this.hideHints()
+        this._dismissHints = () => this._hideHints()
         window.addEventListener("scroll", this._dismissHints, { passive: true, once: true })
         window.addEventListener("resize", this._dismissHints, { once: true })
         return this
     }
 
     /** @returns {WebHotkeys} */
-    hideHints() {
+    _hideHints() {
         if (this._hints) {
             this._hints.remove?.()
             this._hints = null
@@ -1257,9 +1287,13 @@ class WebHotkeys {
         return this
     }
 
-    /** @returns {WebHotkeys} */
-    toggleHints() {
-        return this._hints ? this.hideHints() : this.showHints()
+    /**
+     * Toggle the visual hint badges over the elements having a hotkey.
+     * @param {?boolean} show `null` toggles, true/false forces the state.
+     * @returns {WebHotkeys}
+     */
+    toggleHints(show = null) {
+        return (show ?? !this._hints) ? this._showHints() : this._hideHints()
     }
 
     /** The stylesheet for the help dialog and the hint badges. Injected on the first use only. */
@@ -1329,122 +1363,115 @@ button.webhotkeys-key:focus { outline: 2px solid currentColor; outline-offset: 1
     }
 
     /**
-     * Easily add to the stylesheet on the fly.
-     *
+     * Easily add to the stylesheet on the fly. Internal – used by `_List`'s `css` option.
      * @param {string} cssRule
-     * @example wh.listHandlesUpDown().list("ul li"); wh.insertCss("ul li:focus {border:5px solid red}");
      * @returns {undefined}
      */
-    insertCss(cssRule) {
+    _insertCss(cssRule) {
         this.getSheet().insertRule(cssRule);
     }
 }
 
 
 /**
+ * Options object accepted by `WebHotkeys.list`.
+ * @typedef {Object} ListOptions
+ * @property {String} [current=':focus'] Selector describing the currently selected item.
+ * @property {?String} [css=null] Injected via `wh._insertCss` as `query + current + css`.
+ * @property {boolean} [wrap=false] Jump from the last item to the first one and back.
+ * @property {boolean} [scroll=true] Scroll the newly selected item into the view.
+ * @property {?function} [onChange=null] Called with (newEl, oldEl) before the change; returning false cancels it.
+ * @property {?function} [onChanged=null] Called with (newEl) once the change has happened.
+ * @property {boolean} [upDown=false] Grab ArrowUp/ArrowDown for this listing.
+ * @property {boolean} [homeEnd=false] Grab Home/End for this listing.
+ * @property {boolean|number} [typeahead=false] `true` uses an 800 ms timeout, a number a custom one (ms).
+ */
+
+/**
  * @see WebHotkeys.list
  */
 class _List {
-    constructor(query, currentSelector, method, _wh) {
-        if (typeof query === "undefined") {
-            query = "div";
-        }
-        if (typeof currentSelector === "undefined" || currentSelector === null) {
-            currentSelector = ":focus";
-        }
-
-        this.query = query
-        this.currentSelector = currentSelector
-        this.method = method
+    constructor(_wh) {
+        this.query = "div"
+        this.currentSelector = ":focus"
+        this.onChange = null
+        this.onChanged = null
         this.selected = null
         this._wh = _wh
         /** @type {boolean} Jump from the last item to the first one and back. */
         this.wrap = false
         /** @type {boolean} Scroll the newly selected item into the view. */
         this.scroll = true
+        /** @type {?Action} Restricts the upDown/homeEnd grabs, @see WebHotkeys.grab. */
+        this.scope = null
+        /** @type {Hotkey[]} The upDown/homeEnd hotkeys, so `destroy()` can undo just this instance. */
+        this._hotkeys = []
     }
 
     /**
-     * @see WebHotkeys.list
+     * Apply the options given to `WebHotkeys.list`. @see WebHotkeys.list
+     * @param {String} [query]
+     * @param {ListOptions} options
      */
-    setQuery(query) {
-        this.query = query;
-        return this;
-    }
-
-    /**
-     * @param {String} currentSelector The part of selector, describing currently selected item. If not defined or null, the default is: ":focus".
-     * @param {String} css Code that will highlight the selector.
-     * @example wh.list("ul li").setCurrentSelector(".custom-active", "{border:5px solid red}")
-     */
-    setCurrentSelector(currentSelector, css = null) {
-        this.currentSelector = currentSelector
-        if (css) {
-            this._wh.insertCss(this.query + this.currentSelector + css);
+    _configure(query, {
+        current, css = null, wrap, scroll, onChange, onChanged, scope, upDown = false, homeEnd = false, typeahead = false,
+    } = {}) {
+        if (query !== undefined) {
+            this.query = query
         }
-        return this
+        if (current !== undefined) {
+            this.currentSelector = current
+            if (css) {
+                this._wh._insertCss(this.query + this.currentSelector + css)
+            }
+        }
+        if (wrap !== undefined) {
+            this.wrap = wrap
+        }
+        if (scroll !== undefined) {
+            this.scroll = scroll
+        }
+        if (onChange !== undefined) {
+            this.onChange = onChange
+        }
+        if (onChanged !== undefined) {
+            this.onChanged = onChanged
+        }
+        if (scope !== undefined) {
+            this.scope = scope
+        }
+        if (upDown) {
+            this._handleUpDown()
+        }
+        if (homeEnd) {
+            this._handleHomeEnd()
+        }
+        if (typeahead) {
+            this._handleTypeahead(typeof typeahead === "number" ? typeahead : 800)
+        }
     }
 
-    /**
-     * @see WebHotkeys.list
-     */
-    setChangeFn(method) {
-        this.method = method;
-        return this
+    /** Macro: Arrows UP/DOWN grabbed for listing instead of `this.list().goPrev/goNext` */
+    _handleUpDown() {
+        this._hotkeys.push(
+            this._wh.grab("ArrowUp", "Lists up", () => this.goPrev(), this.scope),
+            this._wh.grab("ArrowDown", "Lists down", () => this.goNext(), this.scope),
+        )
     }
 
-    /**
-     * @param {fn} Method will be called after the successful change of the selected element, receives newEl as a param.
-     * @returns {_List}
-     */
-    setCallback(method) {
-        this._callback = method
-        return this
-    }
-
-    /**
-     * Going below the last item continues at the first one (and vice versa).
-     * @param {boolean} wrap
-     * @returns {_List}
-     */
-    setWrap(wrap = true) {
-        this.wrap = wrap
-        return this
-    }
-
-    /**
-     * @param {boolean} scroll Scroll the selected item into the view.
-     * @returns {_List}
-     */
-    setScroll(scroll = true) {
-        this.scroll = scroll
-        return this
-    }
-
-    /**
-     * Macro: Arrows UP/DOWN grabbed for listing instead of `this.list().goPrev/goNext`
-     */
-    handleUpDown() {
-        this._wh.grab("ArrowUp", "Lists up", () => this.goPrev())
-        this._wh.grab("ArrowDown", "Lists down", () => this.goNext())
-        return this
-    }
-
-    /**
-     * Macro: Home/End jump to the first/last item.
-     */
-    handleHomeEnd() {
-        this._wh.grab("Home", "Lists first", () => this.goFirst())
-        this._wh.grab("End", "Lists last", () => this.goLast())
-        return this
+    /** Macro: Home/End jump to the first/last item. */
+    _handleHomeEnd() {
+        this._hotkeys.push(
+            this._wh.grab("Home", "Lists first", () => this.goFirst(), this.scope),
+            this._wh.grab("End", "Lists last", () => this.goLast(), this.scope),
+        )
     }
 
     /**
      * Type the first letters of an item to select it (the classic listbox behaviour).
      * @param {number} timeout Milliseconds before the typed prefix is forgotten.
-     * @returns {_List}
      */
-    handleTypeahead(timeout = 800) {
+    _handleTypeahead(timeout = 800) {
         let prefix = ""
         let last = 0
         this._typeahead = e => {
@@ -1460,7 +1487,6 @@ class _List {
             }
         }
         document.addEventListener("keydown", this._typeahead, true)
-        return this
     }
 
     /**
@@ -1476,12 +1502,14 @@ class _List {
         return !!found
     }
 
-    /** Detach the typeahead listener. @see WebHotkeys.destroy */
+    /** Detach the typeahead listener and the upDown/homeEnd grabs of this instance. */
     destroy() {
         if (this._typeahead) {
             document.removeEventListener("keydown", this._typeahead, true)
             this._typeahead = null
         }
+        this._hotkeys.forEach(hotkey => hotkey?.remove())
+        this._hotkeys = []
         return this
     }
 
@@ -1511,8 +1539,8 @@ class _List {
             const count = this.items.length
             for (let i = 0; i < count; i++) { // loops the items
                 if (this.selected.isSameNode(this.items[i])) { // this is our selected item in the DOM
-                    this.prev = this.items[this.wrap ? (i - steps % count + count) % count : Math.max(i - steps, 0)];
-                    this.next = this.items[this.wrap ? (i + steps) % count : Math.min(i + steps, count - 1)];
+                    this.prev = this.items[this.wrap ? _wrapIndex(i, -steps, count) : _clampIndex(i, -steps, count)];
+                    this.next = this.items[this.wrap ? _wrapIndex(i, steps, count) : _clampIndex(i, steps, count)];
                     return true;
                 }
             }
@@ -1523,23 +1551,22 @@ class _List {
         return false;
     }
 
-    setCurrent(el) {
+    /**
+     * The currently selected element. (Even if it changed since ex: last go call due to another user activity on page.)
+     * @type {null|HTMLElement}
+     */
+    get current() {
+        this._loadSiblings()
+        return this.selected
+    }
+
+    set current(el) {
         if (this._loadSiblings()) {
             this._change(el);
             if (!this._loadSiblings()) {
                 console.error("WebHotkeys.js> Could not change successfully to:", el);
             }
         }
-        return this;
-    }
-
-    /**
-     * Get current this matching the selector. (Even if it changed since ex: last go call due to another user activity on page.)
-     * @return {null|HTMLElement|*}
-     */
-    getCurrent() {
-        this._loadSiblings()
-        return this.selected
     }
 
     goNext(steps) {
@@ -1569,42 +1596,129 @@ class _List {
     }
 
     _change(newEl, oldEl) {
-        let proceed = true
-        if (typeof this.method === "function") {
-            proceed = this.method(newEl, oldEl)
+        return _applyChange(this, newEl, oldEl)
+    }
+}
+
+/**
+ * @typedef GridOptions
+ * @property {String} [current=':focus'] Selector describing the currently selected cell.
+ * @property {boolean} [wrap=false] Wrap around row/column edges instead of stopping there.
+ * @property {boolean} [scroll=true] Scroll the newly selected cell into the view.
+ * @property {?function} [onChange=null] Called with `(newEl, oldEl)` before the change; returning
+ *  `false` cancels it.
+ * @property {?function} [onChanged=null] Called with `(newEl)` once the change has happened.
+ * @property {?Action} [scope=null] Restricts the Up/Down/Left/Right grabs, @see WebHotkeys.grab.
+ */
+
+/**
+ * 2D keyboard navigation over a table (rows × cells within a row).
+ *
+ * Unlike `list()`, every call to `WebHotkeys.grid()` returns its own independent instance, so
+ * several tables can coexist on one page without one grid stealing the arrow keys from another
+ * (give each a distinct `scope`).
+ * @see WebHotkeys.grid
+ */
+class _Grid {
+    /**
+     * @param {WebHotkeys} _wh
+     * @param {String} rowQuery Selector for the rows (ex: `"table.dbtable tr"`).
+     * @param {String} cellQuery Selector for the cells within a row (ex: `"td"`).
+     * @param {GridOptions} [options]
+     */
+    constructor(_wh, rowQuery, cellQuery, {
+        current = ":focus", wrap = false, scroll = true, onChange = null, onChanged = null, scope = null,
+    } = {}) {
+        this._wh = _wh
+        this.rowQuery = rowQuery
+        this.cellQuery = cellQuery
+        this.currentSelector = current
+        this.wrap = wrap
+        this.scroll = scroll
+        this.onChange = onChange
+        this.onChanged = onChanged
+        this.selected = null
+        this._hotkeys = [
+            this._wh.grab("ArrowUp", "Grid up", () => this.goUp(), scope),
+            this._wh.grab("ArrowDown", "Grid down", () => this.goDown(), scope),
+            this._wh.grab("ArrowLeft", "Grid left", () => this.goLeft(), scope),
+            this._wh.grab("ArrowRight", "Grid right", () => this.goRight(), scope),
+        ]
+    }
+
+    /**
+     * Locate the currently selected cell, its row and its column index. Falls back to the grid's
+     * very first cell when nothing currently matches `currentSelector`.
+     * @returns {boolean} A cell (hence a position) has been found.
+     */
+    _loadPosition() {
+        this.rows = Array.from(document.querySelectorAll(this.rowQuery))
+        if (!this.rows.length) {
+            return false
         }
-        if (proceed) {
-            if (this.currentSelector.substr(0, 1) === ".") {
-                let cl = this.currentSelector.substr(1)
-                if (oldEl) {
-                    oldEl.classList.remove(cl)
+        for (let r = 0; r < this.rows.length; r++) {
+            const cells = this.rows[r].querySelectorAll(this.cellQuery)
+            for (let c = 0; c < cells.length; c++) {
+                if (cells[c].matches(this.currentSelector)) {
+                    this.rowIndex = r
+                    this.colIndex = c
+                    this.selected = cells[c]
+                    return true
                 }
-                if (newEl) {
-                    newEl.classList.add(cl)
-                }
-            } else if (this.currentSelector.substring(0, 1) === "[") {
-                const attrName = this.currentSelector.substring(1, this.currentSelector.length - 1)
-                if (oldEl) {
-                    oldEl.removeAttribute(attrName)
-                }
-                if (newEl) {
-                    newEl.setAttribute(attrName, "1")
-                }
-            } else if (this.currentSelector.indexOf(":focus") === 0) {
-                newEl.focus();
-            } else { //selector can be I.E. a data-attribute
-                console.error("WebHotkeys.js> Don't know how to process selector type:", this.currentSelector)
-                return false;
-            }
-            this.selected = newEl;
-            if (this.scroll) {
-                newEl?.scrollIntoView?.({ block: "nearest" })
-            }
-            if (this._callback) {
-                this._callback(newEl)
             }
         }
+        const cells = this.rows[0].querySelectorAll(this.cellQuery)
+        if (!cells.length) {
+            return false
+        }
+        this.rowIndex = 0
+        this.colIndex = 0
+        this.selected = cells[0]
         return true
+    }
+
+    /** Move to the same column in the row above, clamping the column to that row's width. */
+    goUp(steps = 1) {
+        return this._move(-steps, 0)
+    }
+
+    /** Move to the same column in the row below, clamping the column to that row's width. */
+    goDown(steps = 1) {
+        return this._move(steps, 0)
+    }
+
+    /** Move to the previous cell within the current row. */
+    goLeft(steps = 1) {
+        return this._move(0, -steps)
+    }
+
+    /** Move to the next cell within the current row. */
+    goRight(steps = 1) {
+        return this._move(0, steps)
+    }
+
+    _move(rowDelta, colDelta) {
+        if (!this._loadPosition()) {
+            return false
+        }
+        const oldEl = this.selected
+        const rowIndex = rowDelta
+            ? (this.wrap ? _wrapIndex(this.rowIndex, rowDelta, this.rows.length) : _clampIndex(this.rowIndex, rowDelta, this.rows.length))
+            : this.rowIndex
+        const cells = this.rows[rowIndex].querySelectorAll(this.cellQuery)
+        if (!cells.length) {
+            return false
+        }
+        const colIndex = colDelta
+            ? (this.wrap ? _wrapIndex(this.colIndex, colDelta, cells.length) : _clampIndex(this.colIndex, colDelta, cells.length))
+            : Math.min(this.colIndex, cells.length - 1)
+        return _applyChange(this, cells[colIndex], oldEl)
+    }
+
+    /** Detach the Up/Down/Left/Right grabs. */
+    destroy() {
+        this._hotkeys.forEach(hotkey => hotkey?.remove())
+        return this
     }
 }
 
@@ -1614,6 +1728,62 @@ class _List {
 
 function isString(t) {
     return typeof t === 'string' || t instanceof String
+}
+
+/** Index `steps` away from `index`, wrapping around a collection of `count` items. */
+function _wrapIndex(index, steps, count) {
+    return ((index + steps) % count + count) % count
+}
+
+/** Index `steps` away from `index`, clamped to the collection bounds (no wrapping). */
+function _clampIndex(index, steps, count) {
+    return Math.min(Math.max(index + steps, 0), count - 1)
+}
+
+/**
+ * Move the "current item" marker from `oldEl` to `newEl`, shared by `_List` and `_Grid`.
+ * @param {{currentSelector: string, onChange: ?function, onChanged: ?function, scroll: boolean, selected: ?HTMLElement}} holder
+ * @param {?HTMLElement} newEl
+ * @param {?HTMLElement} oldEl
+ * @returns {boolean}
+ */
+function _applyChange(holder, newEl, oldEl) {
+    let proceed = true
+    if (typeof holder.onChange === "function") {
+        proceed = holder.onChange(newEl, oldEl)
+    }
+    if (proceed) {
+        if (holder.currentSelector.substr(0, 1) === ".") {
+            let cl = holder.currentSelector.substr(1)
+            if (oldEl) {
+                oldEl.classList.remove(cl)
+            }
+            if (newEl) {
+                newEl.classList.add(cl)
+            }
+        } else if (holder.currentSelector.substring(0, 1) === "[") {
+            const attrName = holder.currentSelector.substring(1, holder.currentSelector.length - 1)
+            if (oldEl) {
+                oldEl.removeAttribute(attrName)
+            }
+            if (newEl) {
+                newEl.setAttribute(attrName, "1")
+            }
+        } else if (holder.currentSelector.indexOf(":focus") === 0) {
+            newEl.focus();
+        } else { //selector can be I.E. a data-attribute
+            console.error("WebHotkeys.js> Don't know how to process selector type:", holder.currentSelector)
+            return false;
+        }
+        holder.selected = newEl;
+        if (holder.scroll) {
+            newEl?.scrollIntoView?.({ block: "nearest" })
+        }
+        if (holder.onChanged) {
+            holder.onChanged(newEl)
+        }
+    }
+    return true
 }
 
 /**
@@ -1660,6 +1830,36 @@ function isSafeCombination(combination) {
         return (key.length === 1 || /^[A-Za-z0-9]+$/.test(key))
             && parts.every(mod => MODIFIER_ALIASES[mod.toLowerCase()])
     })
+}
+
+/** Named keys where `event.key === event.code` (unlike `KeyF`/`f` or `Digit1`/`1`). */
+const NAMED_CODES = /^(Arrow(Up|Down|Left|Right)|Home|End|Delete|Backspace|Tab|Enter|Escape|Insert|Space|PageUp|PageDown|F\d{1,2})$/
+
+/**
+ * `_parseHotkey` only ever fills in `key` *or* `code` (whichever the definition implies), so a
+ * simulated keystroke misses the other side that a real one always carries – `_isTextContext`
+ * looks at `e.key`, so `simulate("ArrowDown")` would not be blocked in a text input the way an
+ * actual arrow-down keypress is. Derive the missing side where it is unambiguous; a lone
+ * single-character `key` (ex: "f", "?") stays as is, its physical `code` is not derivable.
+ * @param {KeyEvent} event
+ * @returns {KeyEvent}
+ */
+function completeSimulatedEvent(event) {
+    if (event.code === undefined || event.key !== undefined) {
+        return event
+    }
+    const digit = /^Digit(\d)$/.exec(event.code)
+    if (digit) {
+        return { ...event, key: digit[1] }
+    }
+    const letter = /^Key([A-Z])$/.exec(event.code)
+    if (letter) {
+        return { ...event, key: letter[1].toLowerCase() }
+    }
+    if (NAMED_CODES.test(event.code)) {
+        return { ...event, key: event.code }
+    }
+    return event
 }
 
 /** @returns {Object} Only the modifier flags of the event. */
