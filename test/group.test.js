@@ -15,7 +15,7 @@ function loadWebHotkeys() {
     class FakeHTMLElement { }
     const sandbox = {
         document: {
-            currentScript: null, // skip the ?register auto-instantiation
+            currentScript: null, // skip the data-register auto-instantiation
             querySelectorAll: () => [],
             addEventListener: () => { },
         },

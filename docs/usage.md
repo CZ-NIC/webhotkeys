@@ -4,15 +4,15 @@ The library intercepts [KeyboardEvent](https://developer.mozilla.org/en-US/docs/
 
 ## `WebHotkeys` object
 
-### Using `register`
+### Using `data-register`
 
-If you load the script with the `register` parameter, you have nothing more to do.
+If you load the script with the `data-register` attribute, you have nothing more to do.
 
 ```html
-<script src=".../WebHotkeys.js?register"></script>
+<script src=".../WebHotkeys.js" data-register></script>
 ```
 
-On load, the `register` parameter makes a `new WebHotkeys` instance being implicitly stored to `window.webHotkeys`. Then it grabs all `[data-hotkey]` elements and puts its title as a help text.
+On load, the `data-register` attribute makes a `new WebHotkeys` instance being implicitly stored to `window.webHotkeys`. Then it grabs all `[data-hotkey]` elements and puts its title as a help text.
 
 ```html
 <a href="..." data-hotkey="Alt+1" title="Go to an example link 1">link 1</a>
@@ -29,7 +29,7 @@ wh.grab(...)
 
 ### Custom mode
 
-Removing the register parameter forces you to create the `new WebHotkeys` yourself. See [Options](options.md) for the constructor's options object.
+Removing the `data-register` attribute forces you to create the `new WebHotkeys` yourself. See [Options](options.md) for the constructor's options object.
 
 ```javascript
 const wh = new WebHotkeys({"helpKey": null})

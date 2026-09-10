@@ -15,7 +15,7 @@ import WebHotkeys from "webhotkeys" // or: const WebHotkeys = require("webhotkey
 const wh = new WebHotkeys()
 ```
 
-Both ESM (`import`) and CommonJS (`require`) work and TypeScript definitions are bundled. Note the npm/bundler build does not auto-register on `window.webHotkeys` (there is no `?register` param there) - create the instance yourself as shown above.
+Both ESM (`import`) and CommonJS (`require`) work and TypeScript definitions are bundled. Note the npm/bundler build does not auto-register on `window.webHotkeys` (there is no `data-register` attribute there) - create the instance yourself as shown above.
 
 ## Quickstart
 

@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <title>WebHotkeys example</title>
-    <script src="../WebHotkeys.js?register"></script>
+    <script src="../WebHotkeys.js" data-register></script>
     <style>
         body { font-family: system-ui, sans-serif; max-width: 50em; margin: 2em auto; padding: 0 1em; line-height: 1.5 }
         section { border-top: 1px solid #ddd; padding-top: 1em; margin-top: 1.5em }
@@ -89,7 +89,7 @@
         wh.grab("Mod+s", "Ctrl+s here, Cmd+s on a Mac", () => alert("Mod+s hit"))
         wh.grab("g", "The letter g alone", () => alert("The letter g hit"))
 
-        // sequences - `g i` wins over the plain `g` once the sequence is complete
+        // sequences - `g i` wins once completed; the plain `g` alone still fires, just after a short delay
         wh.group("Sequences", [
             ["g i", "Go to issues (a sequence)", () => alert("The `g i` sequence hit")],
             ["Shift Shift", "Double tap", () => alert("Shift tapped twice")],

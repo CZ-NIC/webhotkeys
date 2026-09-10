@@ -3,9 +3,9 @@
 Easy solution to integrate keyboard hotkeys into the webpage.
 
 ```html
-<script src="https://cdn.jsdelivr.net/gh/CZ-NIC/webhotkeys@0.10.0/WebHotkeys.min.js?register"
-        integrity="sha384-55rjsm8mxmUYTBiTOyaoPXo7/6mVRioI/eyv4mSd3iI0EDUcgRuL2RXVqn45aCgz"
-        crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/gh/CZ-NIC/webhotkeys@0.10.0/WebHotkeys.min.js"
+        integrity="sha384-ufPnjBEtG+6UACz8fYzDek6/0OLCvNYmfZt53W0kWBon/+OITxgB0h1Mi7MlSbvF"
+        crossorigin="anonymous" data-register></script>
 ```
 
 Keep the `crossorigin="anonymous"` attribute – without it the browser refuses to verify the [integrity](https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity) hash and the script does not load at all. The hash belongs to that exact version tag, so copy the whole snippet as it is; a version bumped without the matching hash means the script silently stops loading.
@@ -23,7 +23,7 @@ import WebHotkeys from "webhotkeys" // or: const WebHotkeys = require("webhotkey
 const wh = new WebHotkeys()
 ```
 
-Both ESM (`import`) and CommonJS (`require`) work and TypeScript definitions are bundled. Note the npm/bundler build does not auto-register on `window.webHotkeys` (there is no `?register` param there) - create the instance yourself as shown above.
+Both ESM (`import`) and CommonJS (`require`) work and TypeScript definitions are bundled. Note the npm/bundler build does not auto-register on `window.webHotkeys` (there is no `data-register` attribute there) - create the instance yourself as shown above.
 
 ## Examples
 

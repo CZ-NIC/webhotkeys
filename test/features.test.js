@@ -30,7 +30,7 @@ function loadWebHotkeys() {
     const listeners = []
     const sandbox = {
         document: {
-            currentScript: null, // skip the ?register auto-instantiation
+            currentScript: null, // skip the data-register auto-instantiation
             activeElement: null,
             querySelectorAll: () => [],
             addEventListener: (type, fn, capture) => listeners.push({ type, fn, capture }),
@@ -144,6 +144,55 @@ test('a longer sequence does not block the plain hotkey of its last key', () => 
     wh.simulate("i")
     wh.simulate("g i")
     assert.deepStrictEqual(hits, ["plain", "sequence"])
+})
+
+test('a plain hotkey does not shadow a longer sequence starting with the same key', () => {
+    const wh = fresh()
+    const hits = []
+    wh.grab("z", "Plain", () => hits.push("plain"))
+    wh.grab("z x", "Sequence", () => hits.push("sequence"))
+    wh.simulate("z")
+    wh.simulate("x")
+    assert.deepStrictEqual(hits, ["sequence"], "the sequence must win, the plain 'z' must not fire early")
+})
+
+test('an unrelated key breaks the shadowed prefix, firing the plain hotkey right away', () => {
+    const wh = fresh()
+    const hits = []
+    wh.grab("z", "Plain", () => hits.push("plain"))
+    wh.grab("z x", "Sequence", () => hits.push("sequence"))
+    let missed = null
+    wh.options.onMiss = e => missed = e.key
+    wh.simulate("z")
+    wh.simulate("y")
+    assert.deepStrictEqual(hits, ["plain"])
+    assert.strictEqual(missed, "y", "'y' itself is still reported as a miss")
+})
+
+testAsync('a shadowed plain hotkey fires after sequenceTimeout if nothing continues it', async () => {
+    const wh = fresh({ sequenceTimeout: 20 })
+    const hits = []
+    wh.grab("z", "Plain", () => hits.push("plain"))
+    wh.grab("z x", "Sequence", () => hits.push("sequence"))
+    wh.simulate("z")
+    assert.deepStrictEqual(hits, [], "must wait, not fire immediately")
+    await new Promise(resolve => setTimeout(resolve, 50))
+    assert.deepStrictEqual(hits, ["plain"])
+    wh.destroy() // this instance would otherwise keep listening on the shared `document` forever
+})
+
+test('warnConflicts warns when a plain hotkey and a longer sequence share their start', () => {
+    const wh = fresh({ warnConflicts: true })
+    const warnings = []
+    const originalWarn = console.warn
+    console.warn = (...args) => warnings.push(args.join(" "))
+    try {
+        wh.grab("z x", "Sequence", () => { })
+        wh.grab("z", "Plain", () => { })
+    } finally {
+        console.warn = originalWarn
+    }
+    assert.ok(warnings.some(w => w.includes("shadows the sequence")), warnings.join("\n"))
 })
 
 //

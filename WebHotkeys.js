@@ -2004,7 +2004,7 @@ function createEl(tag, className = "", parent = null) {
 //
 // Public
 //
-if (typeof document !== "undefined" && document.currentScript && new URL(document.currentScript.src).searchParams.has("register")) { // currentScript is unavailable in i.e. a content script
+if (typeof document !== "undefined" && document.currentScript && document.currentScript.dataset.register !== undefined) { // currentScript is unavailable in i.e. a content script
     window.webHotkeys = new WebHotkeys()
 }
 
