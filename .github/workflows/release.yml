@@ -26,6 +26,7 @@ jobs:
 
       - run: npm ci
       - run: npm test
+      - run: npm run build # dist/ is gitignored, test:min needs it built first
       - run: npm run test:min
 
       - name: The tag must match the version in package.json

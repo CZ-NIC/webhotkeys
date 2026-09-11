@@ -1,4 +1,4 @@
-# 1.0.0 (unreleased)
+# 1.0.0 (2026-09-11)
 feat: `wh.grid(rowQuery, cellQuery, options)` - 2D keyboard navigation over a table (Up/Down keep the column and move between rows, Left/Right move within a row, `grid.go(rows, cols)` programmatically). Every call returns its own independent instance, so several tables can coexist on the same page (give each a `scope` so their arrow keys don't collide).
 feat: key sequences (`g i`) and double taps (`Shift Shift`).
 feat: `Mod+` modifier (Ctrl / Cmd by the platform) and the Apple symbols (⌘⌥⇧⌃) in the hints on a Mac. `Meta` is no longer missing from the clue.

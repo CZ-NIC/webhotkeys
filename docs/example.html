@@ -9,8 +9,12 @@
         body { font-family: system-ui, sans-serif; max-width: 50em; margin: 2em auto; padding: 0 1em; line-height: 1.5 }
         section { border-top: 1px solid #ddd; padding-top: 1em; margin-top: 1.5em }
         kbd { background: #eee; border: 1px solid #ccc; border-radius: .25em; padding: 0 .3em; font-family: monospace }
+        pre { background: #f6f6f6; border: 1px solid #e0e0e0; border-radius: .3em; padding: .6em .8em; overflow-x: auto; font-size: .85em }
         li.active { background: gold }
         ul#tracks { max-height: 6em; overflow: auto; border: 1px solid #ccc; padding: .5em 2em; margin: 0 }
+        table#grid { border-collapse: collapse }
+        table#grid td { border: 1px solid #ccc; padding: .3em 1em; cursor: pointer }
+        table#grid td:focus { background: gold; outline: none }
         #log { font-family: monospace; font-size: .85em; color: #555; white-space: pre-wrap }
     </style>
 </head>
@@ -20,25 +24,58 @@
     <p>Hit <kbd>F1</kbd> for the help dialog, <kbd>F2</kbd> to badge every element having a hotkey.</p>
 
     <section>
+        <h2>Programmatic</h2>
+        <p>Hit <kbd>f</kbd> or <kbd>1</kbd> - both are grabbed by the snippet below. The letter goes by <em>key</em>
+            (what the layout produces), the digit by <em>code</em> (the physical key, so it fires on any layout).
+            <kbd>F1</kbd> lists every hotkey on this page.</p>
+        <pre><code>const wh = window.webHotkeys  // the &lt;script data-register&gt; tag made this one
+
+wh.grab("f", "The letter f alone", () =&gt; alert("The letter f hit"))
+wh.grab("Digit1", "Digit 1, whatever the keyboard layout", () =&gt; alert("Digit1 hit"))</code></pre>
+    </section>
+
+    <section>
         <h2>Declarative</h2>
+        <p>No JavaScript at all - the <code>data-hotkey</code> attribute is enough. Hit <kbd>Ctrl+j</kbd> to click the
+            button, <kbd>Alt+n</kbd> to focus the note, <kbd>Alt+c</kbd> to tick the checkbox. A whole
+            <code>data-hotkey-group</code> shows up as one section in the <kbd>F1</kbd> dialog.</p>
+        <p>What the element does is chosen by its type - a text field is focused, a button, a checkbox and a radio
+            clicked, a <code>&lt;details&gt;</code> toggled; <code>data-hotkey-action</code> overrides that
+            (<code>click</code>, <code>focus</code>, <code>toggle</code>, <code>none</code>). Hence
+            <kbd>Alt+1</kbd>/<kbd>Alt+2</kbd> pick a radio (and focus it, so the arrows go on from there) while
+            <kbd>Alt+c</kbd> only flips the checkbox, and <kbd>Alt+d</kbd> opens the details although clicking it
+            would do nothing.</p>
+        <pre><code>&lt;button onclick="alert('Clicked the button')" data-hotkey="Ctrl+j"&gt;button&lt;/button&gt;
+
+&lt;span data-hotkey-group="Form"&gt;
+    &lt;input data-hotkey="Alt+n" title="Focus the note" placeholder="a note"&gt;
+    &lt;input type="checkbox" data-hotkey="Alt+c" title="Flip me"&gt;
+    &lt;input type="radio" name="size" value="s" data-hotkey="Alt+1" title="Small"&gt;
+    &lt;input type="radio" name="size" value="m" data-hotkey="Alt+2" title="Medium"&gt;
+&lt;/span&gt;
+
+&lt;details data-hotkey="Alt+d" title="Open me"&gt;
+    &lt;summary&gt;a details, toggled by default&lt;/summary&gt;
+&lt;/details&gt;</code></pre>
         <button onclick="alert('Clicked the button')" data-hotkey="Ctrl+j">button</button>
         <span data-hotkey-group="Form">
             <input data-hotkey="Alt+n" title="Focus the note" placeholder="a note">
             <label><input type="checkbox" data-hotkey="Alt+c" title="Flip me"> checkbox flipped, not focused</label>
-            <label><input type="radio" name="size" value="s" data-hotkey="Alt+1" title="Small"> small</label>
-            <label><input type="radio" name="size" value="m" data-hotkey="Alt+2" title="Medium"> medium (chosen and
-                focused - the arrows go on from there)</label>
+            <div>
+                <label><input type="radio" name="size" value="s" data-hotkey="Alt+1" title="Small"> small</label>
+                <label><input type="radio" name="size" value="m" data-hotkey="Alt+2" title="Medium"> medium</label>
+            </div>
         </span>
         <details data-hotkey="Alt+d" title="Open me">
             <summary>a details, toggled by default</summary>
-            No <code>data-hotkey-action</code> needed - clicking a &lt;details&gt; would do nothing.
+            It sits outside the <code>Form</code> group, so <kbd>F1</kbd> lists it among the ungrouped hotkeys.
         </details>
     </section>
 
     <section>
         <h2>Sequences</h2>
-        <p>Hit <kbd>g</kbd> then <kbd>i</kbd>. Or <kbd>g</kbd> alone - nothing happens, the key waits for the rest.
-            Tap <kbd>Shift</kbd> twice for a double tap.</p>
+        <p>Hit <kbd>g</kbd> then <kbd>i</kbd>. The <kbd>g</kbd> alone is not grabbed at all - the key is swallowed and
+            waits for the rest of the sequence. Tap <kbd>Shift</kbd> twice for a double tap.</p>
     </section>
 
     <section>
@@ -52,6 +89,19 @@
             <li>Etude</li>
             <li>Fugue</li>
         </ul>
+    </section>
+
+    <section>
+        <h2>The grid helper</h2>
+        <p>Click a cell first - that both scopes the arrows to this table (not the whole page) and marks where to
+            start from. Then <kbd>↑</kbd>/<kbd>↓</kbd> keep the column, <kbd>←</kbd>/<kbd>→</kbd> move within the row.
+        </p>
+        <pre><code>wh.grid("#grid tr", "td", { scope: "#grid", wrap: true })</code></pre>
+        <table id="grid">
+            <tr><td tabindex="0">A1</td><td tabindex="0">B1</td><td tabindex="0">C1</td></tr>
+            <tr><td tabindex="0">A2</td><td tabindex="0">B2</td><td tabindex="0">C2</td></tr>
+            <tr><td tabindex="0">A3</td><td tabindex="0">B3</td><td tabindex="0">C3</td></tr>
+        </table>
     </section>
 
     <section>
@@ -83,19 +133,19 @@
     </section>
 
     <script>
-        const wh = window.webHotkeys
+        const wh = window.webHotkeys  // the <script data-register> tag made this one
         // F1 (help) and F2 (badge the elements having a hotkey) are grabbed by default
         wh.setOptions({ onMiss: e => log(`miss: ${e.key}`) })
 
-        // plain combinations
+        // plain combinations - a single letter goes by `key`, anything longer by `code`
+        wh.grab("f", "The letter f alone", () => alert("The letter f hit"))
         wh.grab("Digit1", "Digit 1, whatever the keyboard layout", () => alert("Digit1 hit"))
         wh.grab("Alt+ArrowDown", "Alt+ArrowDown", () => alert("Alt+ArrowDown hit"))
         wh.grab("?", "A question mark, no need to mention Shift", () => alert("Question mark hit"))
         wh.grab("Alt++", "The plus sign with Alt", () => alert("Alt and the plus sign hit"))
         wh.grab("Mod+s", "Ctrl+s here, Cmd+s on a Mac", () => alert("Mod+s hit"))
-        wh.grab("g", "The letter g alone", () => alert("The letter g hit"))
 
-        // sequences - `g i` wins once completed; the plain `g` alone still fires, just after a short delay
+        // sequences - `g` alone is not grabbed, so the key is swallowed while `g i` may still be coming
         wh.group("Sequences", [
             ["g i", "Go to issues (a sequence)", () => alert("The `g i` sequence hit")],
             ["Shift Shift", "Double tap", () => alert("Shift tapped twice")],
@@ -107,6 +157,9 @@
 
         // the list helper (a WebHotkeys instance handles a single `list()` at a time)
         wh.list("ul#tracks li", { current: ".active", wrap: true, upDown: true, homeEnd: true, typeahead: true })
+
+        // the grid helper - scoped to the table, so its arrows only fire once a cell is focused
+        wh.grid("#grid tr", "td", { scope: "#grid", wrap: true })
 
         // a combobox: arrow keys navigate the suggestion list without leaving the input.
         // Plain DOM code (not `list()`, already busy with #tracks above) - move `.active` a step.
