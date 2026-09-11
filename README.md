@@ -3,14 +3,14 @@
 Easy solution to integrate keyboard hotkeys into the webpage.
 
 ```html
-<script src="https://cdn.jsdelivr.net/gh/CZ-NIC/webhotkeys@0.10.0/WebHotkeys.min.js"
-        integrity="sha384-/+9BvtFd9Qupf3+XMHWpBCquonlSGfTj6lttSqC65f8S6i8ZzqgnfnRch0pf9IH7"
+<script src="https://cdn.jsdelivr.net/npm/webhotkeys@0.10.0/dist/WebHotkeys.min.js"
+        integrity="sha384-WiN7UmcpuQUcMiNObEmUrNT6qx9Fu+QjVKYYLXfm+Z9dD3XBgoq4wfuuuXH/hh9v"
         crossorigin="anonymous" data-register></script>
 ```
 
-Keep the `crossorigin="anonymous"` attribute – without it the browser refuses to verify the [integrity](https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity) hash and the script does not load at all. The hash belongs to that exact version tag, so copy the whole snippet as it is; a version bumped without the matching hash means the script silently stops loading.
+Keep the `crossorigin="anonymous"` attribute – without it the browser refuses to verify the [integrity](https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity) hash and the script does not load at all. The hash belongs to that exact version, so copy the whole snippet as it is; a version bumped without the matching hash means the script silently stops loading.
 
-While debugging, drop the `.min` to get the readable source. It is a different file, hence a different hash – recompute it (`openssl dgst -sha384 -binary WebHotkeys.js | openssl base64 -A`) or leave the `integrity` attribute out of your local build.
+While debugging, swap `dist/WebHotkeys.min.js` for `src/WebHotkeys.js` to get the readable source. It is a different file, hence a different hash – recompute it (`openssl dgst -sha384 -binary src/WebHotkeys.js | openssl base64 -A`) or leave the `integrity` attribute out of your local build.
 
 Or install it from npm:
 

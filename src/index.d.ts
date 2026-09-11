@@ -169,9 +169,8 @@ export declare class WebHotkeys {
     /** Detach the listener and the observer, forget every hotkey. */
     destroy(): this
 
-    grab(hotkey: Key, action: Action): Hotkey
-    grab(hotkey: Key, hint: string, action: Action, scope?: Scope | { scope?: Scope | null, inInput?: boolean } | null): Hotkey
-    group(name: string, definitions?: Array<[Key, string | Action, Action?, (Scope | { scope?: Scope | null, inInput?: boolean } | null)?]>): HotkeyGroup
+    grab(hotkey: Key, hint: string, action: Action, scope?: Scope | { scope?: Scope | null, inInput?: boolean, group?: string | null } | null): Hotkey
+    group(name: string, definitions?: Array<[Key, string, Action, (Scope | { scope?: Scope | null, inInput?: boolean, group?: string | null } | null)?]>): HotkeyGroup
     /** Every call returns its own independent instance, so several lists can coexist on one page. */
     list(query?: string, options?: ListOptions): HotkeyList
     /** 2D keyboard navigation over a table (rows × cells within a row). Unlike `list()`, every call
@@ -217,7 +216,11 @@ export default WebHotkeys
 
 declare global {
     interface Window {
-        /** Set when the script is loaded with the `?register` parameter. */
+        /** Set when the script is loaded with the `data-register` attribute. */
         webHotkeys?: WebHotkeys
+        /** Set by the classic `<script>` path, so `new window.WebHotkeys()` works without `data-register`. */
+        WebHotkeys?: typeof WebHotkeys
+        Hotkey?: typeof Hotkey
+        HotkeyGroup?: typeof HotkeyGroup
     }
 }

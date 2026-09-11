@@ -164,7 +164,7 @@ class Hotkey {
 
     /** Text representation. @returns {string} */
     get text() {
-        return `${this.clue}: ${this.hint}`
+        return this.hint ? `${this.clue}: ${this.hint}` : this.clue
     }
 
     /**
@@ -581,35 +581,33 @@ class WebHotkeys {
     }
 
     /**
-     * .grab(hotkey, [hint], action, [scope|options])
+     * .grab(hotkey, hint, action, [scope|options])
      *
      * @param {Key} hotkey Key combination to be grabbed. Ex: 'Alt+a', 'Ctrl+PageDown', 'g i' (a sequence).
-     * @param {string|Action} hintOrAction Either hint text or an action (if the action parameter stays undefined).
+     * @param {string} hint Text shown in the help dialog and hint badges.
      * @param {Action} action  What will happen on hotkey trigger.
      *   If action returns false, hotkey will be treated as non-existent and event will propagate further.
      *   If action is a HTMLElement or its string selector, its click or focus method (form elements) is invoked instead.
-     * @param {?Action|{scope: ?Action, inInput: ?boolean}} scope Scope within the hotkey is allowed to be launched,
-     *  or an options object `{scope, inInput}`.
+     * @param {?Action|{scope: ?Action, inInput: ?boolean, group: ?string}} scope Scope within the hotkey is allowed to be launched,
+     *  or an options object `{scope, inInput, group}`.
      *  The scope can be an HTMLElement that the active element is being search under when the hotkey triggers.
      *  The scope can an HTMLElement selector, does not have to exist at the shorcut definition time.
      *  The scope can be a function, resolved at the keystroke time. True means the scope matches. That way, you can implement negative scope.
      *  (Ex: down arrow should work unless there is DialogOverlay in the document root.)
      *  `inInput: true` fires the hotkey even while the user is typing into an input or a contenteditable
      *  (ex: arrow keys navigating a combobox's suggestion list). @see Hotkey.allowInput
+     *  `group` adds the hotkey to a named `HotkeyGroup` (same as `wh.group(name, [[...]])` would).
      * @returns {Hotkey}
      */
-    grab(hotkey, hintOrAction, action, scope = null) {
-        // juggle optional parameters
-        if (action === undefined) {  // action parameter was not used - shift the others
-            action = hintOrAction
-            hintOrAction = ""
-        }
+    grab(hotkey, hint, action, scope = null) {
         let inInput = false
-        // An options object `{scope, inInput}`, not a plain scope. Checked by prototype chain depth,
+        let group = null
+        // An options object `{scope, inInput, group}`, not a plain scope. Checked by prototype chain depth,
         // not `typeof` (an HTMLElement/selector-result is an object too) nor `=== Object.prototype`
         // (breaks across realms, ex: a test running WebHotkeys.js inside a `vm` context).
         if (scope && typeof scope === "object" && Object.getPrototypeOf(Object.getPrototypeOf(scope) ?? {}) === null) {
             inInput = scope.inInput ?? false
+            group = scope.group ?? null
             scope = scope.scope ?? null
         }
         let error = !hotkey || !action
@@ -625,7 +623,7 @@ class WebHotkeys {
             return
         }
         // register hotkey and set the hint to the DOM
-        const hotkeyO = new Hotkey(action, hintOrAction, scope, this._parseSequence(hotkey), this)
+        const hotkeyO = new Hotkey(action, hint, scope, this._parseSequence(hotkey), this)
         hotkeyO.allowInput = inInput
 
         // The user may have remapped this very combination in a previous session (or in another
@@ -645,6 +643,9 @@ class WebHotkeys {
             if (groupName) {
                 this.group(groupName).push(hotkeyO)
             }
+        }
+        if (group) {
+            this.group(group).push(hotkeyO)
         }
         if (this.options.warnConflicts) {
             // Cheap: only scan the bucket this very hotkey landed in, not every grabbed hotkey.
@@ -2015,4 +2016,11 @@ if (typeof module !== "undefined" && module.exports) {
     module.exports.WebHotkeys = WebHotkeys
     module.exports.Hotkey = Hotkey
     module.exports.HotkeyGroup = HotkeyGroup
+} else if (typeof window !== "undefined") {
+    // A classic <script> tag: a top-level `class` is lexically scoped (like `let`), so it never
+    // becomes a window property. Expose it explicitly, so that a vendored copy of this file
+    // makes `new window.WebHotkeys()` work without reading the docs.
+    window.WebHotkeys = WebHotkeys
+    window.Hotkey = Hotkey
+    window.HotkeyGroup = HotkeyGroup
 }

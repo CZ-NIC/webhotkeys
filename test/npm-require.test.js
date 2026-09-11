@@ -5,7 +5,7 @@
 const assert = require('assert')
 const path = require('path')
 
-const FILE = path.join(__dirname, '..', process.env.WH_FILE || 'WebHotkeys.js')
+const FILE = path.join(__dirname, '..', process.env.WH_FILE || 'src/WebHotkeys.js')
 
 function test(name, fn) {
     try {

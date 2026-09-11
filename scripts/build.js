@@ -2,6 +2,11 @@
 // Builds WebHotkeys.min.js and stamps the version + the SRI hash into README.md.
 // Run through `npm run build`; `npm version` calls it automatically, so the snippet
 // in README.md can never get out of sync with the file jsDelivr serves.
+//
+// WebHotkeys.min.js itself is NOT committed (see .gitignore) - jsDelivr serves it from the
+// npm tarball, into which `prepack` builds it. Only the SRI hash in README.md is committed,
+// which is safe because esbuild is pinned to an exact version, so the output - and therefore
+// the hash - is reproducible byte for byte on any machine. That is what CI verifies.
 'use strict'
 
 const fs = require('fs')
@@ -11,12 +16,14 @@ const esbuild = require('esbuild')
 
 const root = path.join(__dirname, '..')
 const pkg = require(path.join(root, 'package.json'))
-const SOURCE = 'WebHotkeys.js'
-const TARGET = 'WebHotkeys.min.js'
+const SOURCE = 'src/WebHotkeys.js'
+const TARGET = 'dist/WebHotkeys.min.js'
 
 // NEVER add `bundle: true` here. Without it esbuild keeps the top level scope intact, so
 // `class WebHotkeys` stays a global for the plain <script> consumers. Bundling would rename
 // it and `new WebHotkeys()` / `window.webHotkeys` would silently disappear.
+fs.mkdirSync(path.join(root, path.dirname(TARGET)), { recursive: true })
+
 esbuild.buildSync({
     entryPoints: [path.join(root, SOURCE)],
     outfile: path.join(root, TARGET),
@@ -24,7 +31,11 @@ esbuild.buildSync({
     charset: "utf8", // keep the ⌘⌥⇧⌃ symbols readable instead of ⌘ escapes
     target: "es2022", // the source uses ||=, ?., #-free classes; do not downlevel
     legalComments: "none",
-    banner: { js: `/*! WebHotkeys v${pkg.version} | ${pkg.license} | ${pkg.homepage} */` },
+    banner: {
+        js: `/*! WebHotkeys v${pkg.version} | ${pkg.license} | ${pkg.homepage}\n`
+            + ` *  Usage: <script src="WebHotkeys.min.js" data-register></script> then window.webHotkeys.grab("f", "Hint", fn)\n`
+            + ` *  Or without data-register: const wh = new window.WebHotkeys() */`,
+    },
 })
 
 const minified = fs.readFileSync(path.join(root, TARGET))
@@ -34,7 +45,7 @@ const integrity = "sha384-" + crypto.createHash("sha384").update(minified).diges
 const readmePath = path.join(root, "README.md")
 const readme = fs.readFileSync(readmePath, "utf8")
 const stamped = readme
-    .replace(/WebHotkeys@[0-9]+\.[0-9]+\.[0-9]+/g, `WebHotkeys@${pkg.version}`)
+    .replace(/webhotkeys@[0-9]+\.[0-9]+\.[0-9]+/g, `webhotkeys@${pkg.version}`)
     .replace(/integrity="sha384-[A-Za-z0-9+/=]*"/g, `integrity="${integrity}"`)
 if (stamped !== readme) {
     fs.writeFileSync(readmePath, stamped)

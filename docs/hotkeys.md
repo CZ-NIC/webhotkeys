@@ -59,11 +59,11 @@ Start listening to a hotkey. Specify hint and callback to be triggered on hit. R
     **Text-input guard.** We try to determine whether a hotkey should not be triggered - for example, when pressing keys like `a` or `Delete` inside an `<input>` field, which wouldn't make sense. This guards plain letter keys, text-navigation keys (arrows, Home/End, Delete, Backspace) and Enter/Tab while focus is inside a form field or `contenteditable`. `Escape`, function keys (`F2`, ...) and `Ctrl`/`Alt`/`Meta` combinations are **not** guarded - they still fire inside a text field.
 
     Some special hotkeys like `Ctrl+PageDown` will likely never be passed to the webpage and therefore do not function.
-* `hintOrAction` (`string|HTMLElement|Function`): Either hint text or an action (if the action parameter stays undefined).
+* `hint` (`string`): Text shown in the help dialog and hint badges.
 * `action` (`{string|HTMLElement|Function}`): What will happen on hotkey trigger.
      *  If action returns false, hotkey will be treated as non-existent and event will propagate further.
      *  If action is a HTMLElement or its string selector, its click or focus method (form elements) is invoked instead.
-* `scope` (`{HTMLElement|string|Function}|{scope, inInput}`): Scope within the hotkey is allowed to be launched, or an options object.
+* `scope` (`{HTMLElement|string|Function}|{scope, inInput, group}`): Scope within the hotkey is allowed to be launched, or an options object.
      *  The scope can be an HTMLElement that the active element is being search under when the hotkey triggers.
      *  The scope can an HTMLElement selector, does not have to exist at the shorcut definition time.
      *  The scope can be a function, resolved at the keystroke time. True means the scope matches. That way, you can implement negative scope.
@@ -72,6 +72,10 @@ Start listening to a hotkey. Specify hint and callback to be triggered on hit. R
         input or a contenteditable (ex: arrow keys navigating a combobox's suggestion list):
         ```javascript
         wh.grab("ArrowDown", "Next suggestion", next, { scope: "#combo", inInput: true })
+        ```
+     *  `group` adds the hotkey to a named [`HotkeyGroup`](elements-groups.md#hotkeygroup-object), same as passing it through `wh.group(name, [[...]])`:
+        ```javascript
+        wh.grab("Escape", "Close", close, { group: "Dialog" })
         ```
 
 ## Method `group`

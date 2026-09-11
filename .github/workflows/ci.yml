@@ -24,13 +24,14 @@ jobs:
       - name: Tests against the source
         run: npm test
 
-      # The minified file and the SRI hash in README.md are committed artifacts. Rebuild them
-      # and fail if anything moved - that is what keeps the README snippet from going stale.
-      - name: Rebuild and check the committed artifacts are up to date
+      # dist/WebHotkeys.min.js is not committed (jsDelivr serves it from the npm tarball), but the SRI
+      # hash of it in README.md is. esbuild is pinned to an exact version, so rebuilding here must
+      # reproduce that hash byte for byte - if it does not, the README snippet would go stale.
+      - name: Rebuild and check the SRI hash in README.md is up to date
         run: |
           npm run build
-          git diff --exit-code -- WebHotkeys.min.js README.md \
-            || { echo "::error::WebHotkeys.min.js / README.md are out of date - run 'npm run build' and commit"; exit 1; }
+          git diff --exit-code -- README.md \
+            || { echo "::error::README.md is out of date - run 'npm run build' and commit"; exit 1; }
 
       - name: Tests against the minified build
         run: npm run test:min

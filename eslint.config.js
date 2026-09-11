@@ -1,9 +1,11 @@
 const globals = require("globals")
 
 module.exports = [
+    // A config block holding nothing but `ignores` is the global one. `site/` is the local mkdocs
+    // build (gitignored, so CI never sees it) and would otherwise drown the report in vendor code.
+    { ignores: ["site/", "WebHotkeys.min.js"] },
     {
         files: ["**/*.js"],
-        ignores: ["WebHotkeys.min.js"],
         languageOptions: {
             ecmaVersion: "latest",
             sourceType: "script",

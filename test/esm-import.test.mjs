@@ -1,7 +1,7 @@
 // Regression test: the package must be importable as a real ESM module too
 // (the `exports` map points `import` to WebHotkeys.mjs).
 import assert from 'assert'
-import WebHotkeys, { WebHotkeys as Named, Hotkey, HotkeyGroup } from '../WebHotkeys.mjs'
+import WebHotkeys, { WebHotkeys as Named, Hotkey, HotkeyGroup } from '../src/WebHotkeys.mjs'
 
 function test(name, fn) {
     try {

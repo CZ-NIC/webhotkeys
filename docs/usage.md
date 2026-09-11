@@ -29,16 +29,37 @@ wh.grab(...)
 
 ### Custom mode
 
-Removing the `data-register` attribute forces you to create the `new WebHotkeys` yourself. See [Options](options.md) for the constructor's options object.
+Removing the `data-register` attribute forces you to create the `new WebHotkeys` yourself. When
+loaded as a classic `<script>` tag, the class is exposed as `window.WebHotkeys` (and `window.Hotkey`,
+`window.HotkeyGroup`) for exactly this. See [Options](options.md) for the constructor's options object.
 
 ```javascript
 const wh = new WebHotkeys({"helpKey": null})
+// or, if the file was vendored and you only know the global name:
+const wh = new window.WebHotkeys({"helpKey": null})
 ```
 
 ### Method `setOptions`
 *return self*
 
 Takes the same options object as the constructor. Allows dynamic options change.
+
+### Vendoring without npm
+
+`WebHotkeys.js`/`WebHotkeys.min.js` has no runtime dependencies, so a project without a build step
+or npm (a content script, a static site) can just copy the file in - no bundler, no `require`. Two
+ways to get an instance:
+
+* `<script src="WebHotkeys.min.js" data-register></script>` and use `window.webHotkeys`, as above.
+* `<script src="WebHotkeys.min.js"></script>` and call `new window.WebHotkeys()` yourself.
+
+`WebHotkeys.min.js` is not in the git repository - it is generated into `dist/` at publish
+time. Grab it from the CDN (`https://cdn.jsdelivr.net/npm/webhotkeys/dist/WebHotkeys.min.js`),
+from the npm tarball, or build it yourself with `npm run build`. The readable source is
+`src/WebHotkeys.js`.
+
+A vendored copy does not update itself - note the version from the first line of
+`WebHotkeys.min.js` (the banner also repeats both usages above) so you know when to re-copy it.
 
 ## Declarative attributes
 

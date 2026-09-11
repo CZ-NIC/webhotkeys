@@ -1,7 +1,8 @@
 name: Release
 
 # Pushing a bare version tag (0.10.0 - no "v", see .npmrc) publishes to npm.
-# The jsDelivr CDN needs nothing, it serves that git tag by itself.
+# The jsDelivr CDN serves the npm tarball, so the CDN link goes live once this workflow ends;
+# dist/WebHotkeys.min.js is built into the tarball by the `prepack` script, not committed to git.
 on:
   push:
     tags: ["[0-9]+.[0-9]+.[0-9]+"]
