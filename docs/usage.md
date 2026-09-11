@@ -69,10 +69,11 @@ A vendored copy does not update itself - note the version from the first line of
     <button data-hotkey="Alt+n" title="New message">New</button>
 </div>
 
-<!-- a form field is focused by default, `click` it instead -->
-<input data-hotkey="Alt+s" data-hotkey-action="click" type="submit" value="Save">
-<!-- flip a checkbox without focusing it first -->
-<input data-hotkey="Alt+c" data-hotkey-action="toggle" type="checkbox">
+<!-- a submit button is clicked, a text field focused - no attribute needed -->
+<input data-hotkey="Alt+s" type="submit" value="Save">
+<input data-hotkey="Alt+q" type="text" name="query">
+<!-- the attribute is for the exceptions: land on the checkbox instead of flipping it right away -->
+<input data-hotkey="Alt+c" data-hotkey-action="focus" type="checkbox">
 ```
 
 * `[data-hotkey]` grabs the combination.

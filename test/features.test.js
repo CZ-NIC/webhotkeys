@@ -322,6 +322,62 @@ test('a hidden element does not swallow its hotkey', () => {
     assert.strictEqual(fallback, 1)
 })
 
+test('a submit button is clicked, not merely focused', () => {
+    const wh = fresh()
+    const submit = Object.assign(new FakeHTMLElement("INPUT"), { type: "submit" })
+    wh.grab("Alt+s", "Save", submit)
+    wh.simulate("Alt+s")
+    assert.strictEqual(submit.clicked, 1, "focusing a submit button would leave the form unsent")
+    assert.strictEqual(submit.focused, 0)
+})
+
+test('a text input is focused, a checkbox clicked', () => {
+    const wh = fresh()
+    const text = Object.assign(new FakeHTMLElement("INPUT"), { type: "text" })
+    const check = Object.assign(new FakeHTMLElement("INPUT"), { type: "checkbox" })
+    wh.grab("Alt+t", "Text", text)
+    wh.grab("Alt+k", "Check", check)
+    wh.simulate("Alt+t")
+    wh.simulate("Alt+k")
+    assert.strictEqual(text.focused, 1)
+    assert.strictEqual(text.clicked, 0)
+    assert.strictEqual(check.clicked, 1)
+    assert.strictEqual(check.focused, 0)
+})
+
+test('a radio is clicked and focused, so the arrows may go on within the group', () => {
+    const wh = fresh()
+    const radio = Object.assign(new FakeHTMLElement("INPUT"), { type: "radio" })
+    wh.grab("Alt+r", "Medium", radio)
+    wh.simulate("Alt+r")
+    assert.strictEqual(radio.clicked, 1, "a mere focus does not check the radio")
+    assert.strictEqual(radio.focused, 1, "the synthetic click() does not move the focus on its own")
+})
+
+test('a DETAILS opens by default - clicking it would do nothing', () => {
+    const wh = fresh()
+    const details = Object.assign(new FakeHTMLElement("DETAILS"), { open: false })
+    wh.grab("Alt+d", "Details", details)
+    wh.simulate("Alt+d")
+    assert.strictEqual(details.open, true)
+    assert.strictEqual(details.clicked, 0, "the native toggle sits on the SUMMARY, click() on the DETAILS is a no-op")
+    wh.simulate("Alt+d")
+    assert.strictEqual(details.open, false)
+})
+
+test('a focused radio does not swallow the letter hotkeys', () => {
+    const wh = fresh()
+    let fired = 0
+    wh.grab("j", "Down", () => fired++)
+    sandbox.document.activeElement = Object.assign(new FakeHTMLElement("INPUT"), { type: "radio" })
+    wh.simulate("j")
+    assert.strictEqual(fired, 1, "a radio is no text field, it must not stand for a typing context")
+    sandbox.document.activeElement = Object.assign(new FakeHTMLElement("INPUT"), { type: "text" })
+    wh.simulate("j")
+    assert.strictEqual(fired, 1, "a real text field still holds the letter back")
+    sandbox.document.activeElement = null
+})
+
 test('[data-hotkey-action] overrides click/focus', () => {
     const wh = fresh()
     const input = Object.assign(new FakeHTMLElement("INPUT"), { type: "text" })

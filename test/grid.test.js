@@ -110,7 +110,7 @@ function test(name, fn) {
     }
 }
 
-test('goDown/goUp keep the column, goLeft/goRight move within the row', () => {
+test('go(rows, cols): rows keep the column, cols move within the row', () => {
     activeElement = null
     const { table, trs } = buildTable("t", 3, 2)
     const { WebHotkeys } = loadWebHotkeys(table)
@@ -118,14 +118,14 @@ test('goDown/goUp keep the column, goLeft/goRight move within the row', () => {
     const grid = wh.grid("tr", "td")
     trs[0].children[0].focus() // row 0, col 0
 
-    grid.goDown()
-    assert.strictEqual(activeElement, trs[1].children[0], "goDown keeps the column")
-    grid.goRight()
-    assert.strictEqual(activeElement, trs[1].children[1], "goRight moves within the row")
-    grid.goUp()
-    assert.strictEqual(activeElement, trs[0].children[1], "goUp keeps the (new) column")
-    grid.goLeft()
-    assert.strictEqual(activeElement, trs[0].children[0], "goLeft moves back within the row")
+    grid.go(1)
+    assert.strictEqual(activeElement, trs[1].children[0], "go(1) keeps the column")
+    grid.go(0, 1)
+    assert.strictEqual(activeElement, trs[1].children[1], "go(0, 1) moves within the row")
+    grid.go(-1)
+    assert.strictEqual(activeElement, trs[0].children[1], "go(-1) keeps the (new) column")
+    grid.go(0, -1)
+    assert.strictEqual(activeElement, trs[0].children[0], "go(0, -1) moves back within the row")
 
     grid.destroy()
     wh.destroy()
@@ -139,9 +139,9 @@ test('without wrap, the edges just stop moving', () => {
     const grid = wh.grid("tr", "td")
     trs[0].children[0].focus()
 
-    grid.goUp() // already at the first row
+    grid.go(-1) // already at the first row
     assert.strictEqual(activeElement, trs[0].children[0])
-    grid.goLeft() // already at the first column
+    grid.go(0, -1) // already at the first column
     assert.strictEqual(activeElement, trs[0].children[0])
 
     grid.destroy()
@@ -156,9 +156,9 @@ test('wrap: true loops around row and column edges', () => {
     const grid = wh.grid("tr", "td", { wrap: true })
     trs[0].children[0].focus()
 
-    grid.goUp()
+    grid.go(-1)
     assert.strictEqual(activeElement, trs[1].children[0], "wraps to the last row")
-    grid.goLeft()
+    grid.go(0, -1)
     assert.strictEqual(activeElement, trs[1].children[1], "wraps to the last column")
 
     grid.destroy()
@@ -190,3 +190,4 @@ test('two independent grid() instances (two tables) do not steal each other\'s a
     grid2.destroy()
     wh.destroy()
 })
+

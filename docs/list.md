@@ -23,7 +23,8 @@ list.current
 | `scroll` (`true`) | Scroll the selected item into the view. |
 | `onChange` | Called with `(newEl, oldEl)` before the change; returning `false` cancels it. |
 | `onChanged` | Called with `(newEl)` once the change has happened. |
-| `upDown`, `homeEnd`, `typeahead` (`false`/`800`) | Bind the usual listbox keys. |
+| `upDown`, `homeEnd` (`false`) | Bind the usual listbox keys (ArrowUp/ArrowDown, Home/End). |
+| `typeahead` (`false`/`800`) | Type an item's first letters to jump to it, like a native `<select>`. Keystrokes within `800` ms of each other accumulate into one prefix (a longer pause starts a new one); pass a number to use a different timeout. |
 | `scope` | Restricts the `upDown`/`homeEnd` grabs, same as `grab`'s scope. |
 
 | Method/property | Description |
@@ -34,7 +35,7 @@ list.current
 
 ## Grid helper
 
-`wh.grid(rowQuery, cellQuery, options)` turns a table into a 2D keyboard-navigable grid: Up/Down move between rows while keeping the column, Left/Right move between cells of the current row. Unlike `list()`, every call returns its **own independent instance** - several tables can coexist on the same page, as long as each gets a distinct `scope` so their arrow keys don't fight over the focus.
+`wh.grid(rowQuery, cellQuery, options)` turns a table into a 2D keyboard-navigable grid: Up/Down move between rows while keeping the column, Left/Right move between cells of the current row. Every call returns its **own independent instance** - several tables can coexist on the same page, as long as each gets a distinct `scope` so their arrow keys don't fight over the focus.
 
 ```javascript
 const rows = wh.grid("table.dbtable tr", "td", {
@@ -54,5 +55,5 @@ const rows = wh.grid("table.dbtable tr", "td", {
 
 | Method | Description |
 |--------|-------------|
-| `goUp`, `goDown`, `goLeft`, `goRight` | Move programmatically. |
+| `go(rows, cols)` | Move programmatically: `go(1)` down, `go(-1)` up, `go(0, 1)` right, `go(1, -1)` down-left. |
 | `destroy` | Detach the Up/Down/Left/Right grabs. |

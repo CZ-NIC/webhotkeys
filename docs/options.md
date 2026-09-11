@@ -102,9 +102,22 @@ const wh = new WebHotkeys({ observe: false })
 Attribute name overriding what happens with a `[data-hotkey]` element: `click`, `focus`, `toggle`,
 `none`.
 
+The default is chosen from the element itself and covers the common cases without the attribute:
+
+| Element | Default | Why |
+|---------|---------|-----|
+| text `input`, `textarea`, `select` | `focus` | the user wants to type there, not to click it |
+| `input[type=range\|color]` | `focus` | the arrows adjust it once focused |
+| `input[type=checkbox\|radio\|submit\|button\|reset\|image\|file]` | `click` | a mere focus would leave the control untouched |
+| `details` | `toggle` | the native toggle sits on the `summary`, clicking the `details` does nothing |
+| anything else (`button`, `a`, `div`...) | `click` | |
+
+A checkbox is flipped by the click itself, and a radio also takes the focus, so the arrows may go on
+choosing within its group.
+
 ```html
-<input data-hotkey="Alt+s" data-hotkey-action="click" type="submit" value="Save">
-<input data-hotkey="Alt+c" data-hotkey-action="toggle" type="checkbox">
+<input data-hotkey="Alt+t" data-hotkey-action="focus" type="submit" value="Save">
+<div data-hotkey="Alt+x" data-hotkey-action="none">Hinted in the help, does nothing on its own</div>
 ```
 
 ## `warnConflicts`

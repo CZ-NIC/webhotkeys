@@ -24,9 +24,15 @@
         <button onclick="alert('Clicked the button')" data-hotkey="Ctrl+j">button</button>
         <span data-hotkey-group="Form">
             <input data-hotkey="Alt+n" title="Focus the note" placeholder="a note">
-            <label><input type="checkbox" data-hotkey="Alt+c" data-hotkey-action="toggle" title="Toggle me"> checkbox
-                toggled, not focused</label>
+            <label><input type="checkbox" data-hotkey="Alt+c" title="Flip me"> checkbox flipped, not focused</label>
+            <label><input type="radio" name="size" value="s" data-hotkey="Alt+1" title="Small"> small</label>
+            <label><input type="radio" name="size" value="m" data-hotkey="Alt+2" title="Medium"> medium (chosen and
+                focused - the arrows go on from there)</label>
         </span>
+        <details data-hotkey="Alt+d" title="Open me">
+            <summary>a details, toggled by default</summary>
+            No <code>data-hotkey-action</code> needed - clicking a &lt;details&gt; would do nothing.
+        </details>
     </section>
 
     <section>

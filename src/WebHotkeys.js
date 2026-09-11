@@ -13,7 +13,7 @@
  * @property {?function} [onMiss] Called when a keystroke matched no hotkey, receives (event). Handy for debugging.
  * @property {string} [attribute='data-hotkey']  Attribute name to link DOM elements to shorcuts.
  * @property {string} [groupAttribute='data-hotkey-group']  Attribute name to link DOM elements to shorcut groups.
- * @property {string} [actionAttribute='data-hotkey-action']  Attribute name to override what happens with the element ('click', 'focus', 'toggle').
+ * @property {string} [actionAttribute='data-hotkey-action']  Attribute name to override what happens with the element ('click', 'focus', 'toggle', 'none'). Without it a text field is focused, a button/checkbox/radio clicked and a DETAILS toggled. @see defaultAction
  * @property {?string|?function} [ignore=null]  Selector or callback(activeElement, event). When it matches, no hotkey is triggered at all.
  * @property {number} [sequenceTimeout=1000]  Milliseconds a key sequence ('g i') may be spread over. Also how long the F1 dialog waits before committing a recorded sequence.
  * @property {boolean|string} [remap=true]  The F1 dialog lets the user click a combination and press their own. A string is used as the localStorage key (true means 'webhotkeys.remap'), false turns the editing off.
@@ -54,6 +54,29 @@ const WebHotkeysDefaults = {
 const DEFAULT_STORAGE_KEY = "webhotkeys.remap"
 
 const FORM_TAGS = ["INPUT", "SELECT", "TEXTAREA"]
+/** Input types that are not a text field - they never eat a letter key, so the text guard must not stand back for them. */
+const NON_TEXT_INPUT_TYPES = ["checkbox", "radio", "submit", "button", "reset", "image", "file", "range", "color"]
+/** Input types a hotkey should activate instead of merely focusing (a range or a color still wants the focus - the arrows adjust it). */
+const CLICKABLE_INPUT_TYPES = ["checkbox", "radio", "submit", "button", "reset", "image", "file"]
+/** Is the element a text field, ie. would a letter key land in it? (A SELECT counts - letters do its typeahead.) */
+const isTextInput = el => FORM_TAGS.includes(el.tagName) && !(el.tagName === "INPUT" && NON_TEXT_INPUT_TYPES.includes(el.type))
+/**
+ * What happens to a linked element when no [data-hotkey-action] says otherwise.
+ * A text field is focused (the user wants to type), everything else is activated - including a submit
+ * button or a checkbox, which a mere focus would leave untouched. A DETAILS has no activation behaviour
+ * of its own (the native toggle sits on its SUMMARY), so clicking it would silently do nothing.
+ * @param {HTMLElement} element
+ * @returns {string} 'focus' | 'click' | 'toggle'
+ */
+const defaultAction = element => {
+    if (element.tagName === "DETAILS") {
+        return "toggle"
+    }
+    if (element.tagName === "INPUT" && CLICKABLE_INPUT_TYPES.includes(element.type)) {
+        return "click"
+    }
+    return FORM_TAGS.includes(element.tagName) ? "focus" : "click"
+}
 /** These fire a keydown of their own; a sequence step may consist of them only ('Shift Shift'). */
 const MODIFIER_KEYS = ["Shift", "Alt", "Control", "Meta"]
 /** Written in a hotkey definition -> the real KeyboardEvent.key of a lone modifier. */
@@ -901,9 +924,8 @@ class WebHotkeys {
      * 2D keyboard navigation over a table (rows × cells within a row) - Up/Down keep the column and
      * move between rows, Left/Right move between cells of the current row.
      *
-     * Unlike `list()`, every call returns its own independent instance (no shared caching), so
-     * several tables can coexist on the same page - give each a distinct `scope` so their arrow
-     * keys do not fight over the focus.
+     * Every call returns its own independent instance, so several tables can coexist on the same
+     * page - give each a distinct `scope` so their arrow keys do not fight over the focus.
      *
      * @param {String} rowQuery DOM selector for the rows, ex: `"table.dbtable tr"`.
      * @param {String} cellQuery DOM selector for the cells within a row, ex: `"td"`.
@@ -941,8 +963,7 @@ class WebHotkeys {
             )
             // We are in a text editing context. Either a form tag like INPUT or within an editable element.
             && !!active
-            && (FORM_TAGS.includes(active.tagName) && active.type !== "checkbox"
-                || active.contentEditable === "true")
+            && (isTextInput(active) || active.contentEditable === "true")
     }
 
     /**
@@ -1168,22 +1189,34 @@ class WebHotkeys {
      * @param {HTMLElement} element
      */
     _act(element) {
-        const mode = element.getAttribute?.(this.options.actionAttribute)
-            || (FORM_TAGS.includes(element.tagName) && element.type !== "checkbox" ? "focus" : "click")
+        const mode = element.getAttribute?.(this.options.actionAttribute) || defaultAction(element)
         switch (mode) {
             case "focus": return element.focus()
             case "none": return
             case "toggle":
                 if (element.tagName === "DETAILS") {
                     element.open = !element.open
-                } else if (element.type === "checkbox" || element.type === "radio") {
+                } else if (element.type === "checkbox") {
                     element.checked = !element.checked
                     element.dispatchEvent?.(new Event("change", { bubbles: true }))
-                } else {
-                    element.click()
+                } else { // a radio lands here too: clicking checks it *and* unchecks its siblings, flipping `checked` would not
+                    this._activate(element)
                 }
                 return
-            default: return element.click()
+            default: return this._activate(element)
+        }
+    }
+
+    /**
+     * Click the element the way the user would.
+     * @param {HTMLElement} element
+     */
+    _activate(element) {
+        element.click()
+        if (element.type === "radio") {
+            // A real mouse click focuses through its mousedown; the synthetic click() does not.
+            // Without the focus the arrows could not go on choosing within the group.
+            element.focus?.()
         }
     }
 
@@ -1708,9 +1741,9 @@ class _List {
 /**
  * 2D keyboard navigation over a table (rows × cells within a row).
  *
- * Unlike `list()`, every call to `WebHotkeys.grid()` returns its own independent instance, so
- * several tables can coexist on one page without one grid stealing the arrow keys from another
- * (give each a distinct `scope`).
+ * Every call to `WebHotkeys.grid()` returns its own independent instance, so several tables can
+ * coexist on one page without one grid stealing the arrow keys from another (give each a distinct
+ * `scope`).
  * @see WebHotkeys.grid
  */
 class _Grid {
@@ -1733,10 +1766,10 @@ class _Grid {
         this.onChanged = onChanged
         this.selected = null
         this._hotkeys = [
-            this._wh.grab("ArrowUp", "Grid up", () => this.goUp(), scope),
-            this._wh.grab("ArrowDown", "Grid down", () => this.goDown(), scope),
-            this._wh.grab("ArrowLeft", "Grid left", () => this.goLeft(), scope),
-            this._wh.grab("ArrowRight", "Grid right", () => this.goRight(), scope),
+            this._wh.grab("ArrowUp", "Grid up", () => this.go(-1, 0), scope),
+            this._wh.grab("ArrowDown", "Grid down", () => this.go(1, 0), scope),
+            this._wh.grab("ArrowLeft", "Grid left", () => this.go(0, -1), scope),
+            this._wh.grab("ArrowRight", "Grid right", () => this.go(0, 1), scope),
         ]
     }
 
@@ -1771,40 +1804,28 @@ class _Grid {
         return true
     }
 
-    /** Move to the same column in the row above, clamping the column to that row's width. */
-    goUp(steps = 1) {
-        return this._move(-steps, 0)
-    }
-
-    /** Move to the same column in the row below, clamping the column to that row's width. */
-    goDown(steps = 1) {
-        return this._move(steps, 0)
-    }
-
-    /** Move to the previous cell within the current row. */
-    goLeft(steps = 1) {
-        return this._move(0, -steps)
-    }
-
-    /** Move to the next cell within the current row. */
-    goRight(steps = 1) {
-        return this._move(0, steps)
-    }
-
-    _move(rowDelta, colDelta) {
+    /**
+     * Move by `rows` down and `cols` right (negative values go up / left). Moving between rows
+     * keeps the column, clamped to the target row's width.
+     * @param {number} [rows=0]
+     * @param {number} [cols=0]
+     * @returns {boolean} The selection has changed.
+     * @example grid.go(1, 0) // down;  grid.go(-1, -1) // up and left
+     */
+    go(rows = 0, cols = 0) {
         if (!this._loadPosition()) {
             return false
         }
         const oldEl = this.selected
-        const rowIndex = rowDelta
-            ? (this.wrap ? _wrapIndex(this.rowIndex, rowDelta, this.rows.length) : _clampIndex(this.rowIndex, rowDelta, this.rows.length))
+        const rowIndex = rows
+            ? (this.wrap ? _wrapIndex(this.rowIndex, rows, this.rows.length) : _clampIndex(this.rowIndex, rows, this.rows.length))
             : this.rowIndex
         const cells = this.rows[rowIndex].querySelectorAll(this.cellQuery)
         if (!cells.length) {
             return false
         }
-        const colIndex = colDelta
-            ? (this.wrap ? _wrapIndex(this.colIndex, colDelta, cells.length) : _clampIndex(this.colIndex, colDelta, cells.length))
+        const colIndex = cols
+            ? (this.wrap ? _wrapIndex(this.colIndex, cols, cells.length) : _clampIndex(this.colIndex, cols, cells.length))
             : Math.min(this.colIndex, cells.length - 1)
         return _applyChange(this, cells[colIndex], oldEl)
     }

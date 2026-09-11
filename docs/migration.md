@@ -1,6 +1,6 @@
 # Migration
 
-## 0.10 to 0.11
+## 0.9.0 to 1.0.0
 
 Two defaults changed:
 
@@ -11,6 +11,9 @@ And the API grew a `helpKey`/`hintKey`/remapping layer, plus a cleanup of a few 
 
 | Old | New |
 |-----|-----|
+| `<script src="...?register">` | `<script data-register>` |
+| `grab(hotkey, action)` | `grab(hotkey, hint, action)` - `hint` is now a mandatory 2nd parameter |
+| `{selector, selectorGroup, selectorAction}` | `{attribute, groupAttribute, actionAttribute}` |
 | `grabF1: false` | `helpKey: null` |
 | `grabF1: true` (default) | `helpKey: 'F1'` (default) |
 | `hintKey: null` (default) | `hintKey: 'F2'` (default) |

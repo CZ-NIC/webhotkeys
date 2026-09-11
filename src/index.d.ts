@@ -37,7 +37,8 @@ export interface WebHotkeysOptions {
     attribute?: string
     /** Attribute name linking the DOM elements to the groups. */
     groupAttribute?: string
-    /** Attribute name overriding what happens with the element: "click" | "focus" | "toggle" | "none". */
+    /** Attribute name overriding what happens with the element: "click" | "focus" | "toggle" | "none".
+     *  Without it a text field is focused, a button/checkbox/radio clicked and a DETAILS toggled. */
     actionAttribute?: string
     /** Selector or predicate. While it matches the focused element, no hotkey fires at all. */
     ignore?: string | ((this: WebHotkeys, active: HTMLElement | null, event: KeyboardEvent) => boolean) | null
@@ -149,14 +150,9 @@ export interface GridOptions {
 }
 
 export declare class HotkeyGrid {
-    /** Move to the same column in the row above, clamping the column to that row's width. */
-    goUp(steps?: number): boolean
-    /** Move to the same column in the row below, clamping the column to that row's width. */
-    goDown(steps?: number): boolean
-    /** Move to the previous cell within the current row. */
-    goLeft(steps?: number): boolean
-    /** Move to the next cell within the current row. */
-    goRight(steps?: number): boolean
+    /** Move by `rows` down and `cols` right (negative values go up / left); moving between rows
+     *  keeps the column, clamped to the target row's width. Ex: `go(1, -1)` = down and left. */
+    go(rows?: number, cols?: number): boolean
     /** Detach the Up/Down/Left/Right grabs. */
     destroy(): this
 }
@@ -173,8 +169,8 @@ export declare class WebHotkeys {
     group(name: string, definitions?: Array<[Key, string, Action, (Scope | { scope?: Scope | null, inInput?: boolean, group?: string | null } | null)?]>): HotkeyGroup
     /** Every call returns its own independent instance, so several lists can coexist on one page. */
     list(query?: string, options?: ListOptions): HotkeyList
-    /** 2D keyboard navigation over a table (rows × cells within a row). Unlike `list()`, every call
-     *  returns its own independent instance, so several tables can coexist on one page. */
+    /** 2D keyboard navigation over a table (rows × cells within a row). Every call returns its own
+     *  independent instance, so several tables can coexist on one page. */
     grid(rowQuery: string, cellQuery: string, options?: GridOptions): HotkeyGrid
 
     /** Manually fire a combination or a whole sequence. */
