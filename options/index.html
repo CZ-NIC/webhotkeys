@@ -1,0 +1,1096 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://cz-nic.github.io/webhotkeys/options/">
+      
+      
+        <link rel="prev" href="../usage/">
+      
+      
+        <link rel="next" href="../hotkeys/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Options - WebHotkeys</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#options" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="WebHotkeys" class="md-header__button md-logo" aria-label="WebHotkeys" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            WebHotkeys
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Options
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/CZ-NIC/webhotkeys" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    CZ-NIC/webhotkeys
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="WebHotkeys" class="md-nav__button md-logo" aria-label="WebHotkeys" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    WebHotkeys
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/CZ-NIC/webhotkeys" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    CZ-NIC/webhotkeys
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../usage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Usage
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Options
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Options
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#inhidden" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        inHidden
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ignore" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ignore
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#onmiss" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        onMiss
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hint" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        hint
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hintkey" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        hintKey
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#helpkey" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        helpKey
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#remap-onremap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        remap, onRemap
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#observe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        observe
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#actionattribute" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        actionAttribute
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#warnconflicts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        warnConflicts
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../hotkeys/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hotkeys
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../layouts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Keyboard layouts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../elements-groups/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Elements & groups
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../help-remapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Help & remapping
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../list/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    List helper
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../debugging/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Debugging
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../migration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Migration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#inhidden" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        inHidden
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ignore" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ignore
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#onmiss" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        onMiss
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hint" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        hint
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hintkey" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        hintKey
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#helpkey" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        helpKey
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#remap-onremap" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        remap, onRemap
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#observe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        observe
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#actionattribute" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        actionAttribute
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#warnconflicts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        warnConflicts
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="options">Options</h1>
+<p>The constructor (and <code>setOptions</code>) accepts an options object:</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="#hint">hint</a></td>
+<td><code>'title'\|'text'\|false</code></td>
+<td><code>title</code></td>
+<td>Append shorcut text to the element title (ex: 'anchor (Alt+1)') or its text (or its label for the case of a form element).</td>
+</tr>
+<tr>
+<td><a href="#helpkey">helpKey</a></td>
+<td><code>?string</code></td>
+<td><code>'F1'</code></td>
+<td>Key combination that opens the help. <code>null</code> grabs nothing.</td>
+</tr>
+<tr>
+<td>help</td>
+<td><code>'dialog'\|'alert'</code></td>
+<td><code>dialog</code></td>
+<td>How the help is rendered. The dialog is a filterable modal; it falls back to the alert when the DOM is not available.</td>
+</tr>
+<tr>
+<td><a href="#hintkey">hintKey</a></td>
+<td><code>?string</code></td>
+<td><code>'F2'</code></td>
+<td>Key combination toggling the visual badges over every element having a hotkey. <code>null</code> grabs nothing.</td>
+</tr>
+<tr>
+<td>replaceAccesskeys</td>
+<td>boolean</td>
+<td>true</td>
+<td>If true, [accesskey] elements will be converted to hotkeys.</td>
+</tr>
+<tr>
+<td><a href="#observe">observe</a></td>
+<td>boolean</td>
+<td>true</td>
+<td>Monitors DOM changes. Automatically un/grab hotkeys as DOM elements with the given attribute dis/appear.</td>
+</tr>
+<tr>
+<td>onToggle</td>
+<td>function</td>
+<td>undefined</td>
+<td>When having a DOM element linked, run this callback on hotkey toggle. This will be set to the hotkey, first parameter being the element, second boolean whether it got enabled.</td>
+</tr>
+<tr>
+<td>onTrigger</td>
+<td>function</td>
+<td>undefined</td>
+<td>Called right after a hotkey fired, receives <code>(hotkey, event)</code>. Handy for logging.</td>
+</tr>
+<tr>
+<td><a href="#onmiss">onMiss</a></td>
+<td>function</td>
+<td>undefined</td>
+<td>Called when a keystroke matched no hotkey, receives <code>(event)</code>. Handy for debugging.</td>
+</tr>
+<tr>
+<td><a href="#inhidden">inHidden</a></td>
+<td>boolean</td>
+<td>false</td>
+<td>Let a hotkey fire even when its linked element is hidden. Overridable per hotkey.</td>
+</tr>
+<tr>
+<td><a href="#ignore">ignore</a></td>
+<td><code>string\|function</code></td>
+<td>null</td>
+<td>Selector or <code>callback(activeElement, event)</code>. While it matches, no hotkey fires at all.</td>
+</tr>
+<tr>
+<td>sequenceTimeout</td>
+<td>number</td>
+<td>1000</td>
+<td>Milliseconds a key sequence (<code>'g i'</code>) may be spread over. Also the pause that commits a combination recorded in the help dialog.</td>
+</tr>
+<tr>
+<td><a href="#remap-onremap">remap</a></td>
+<td><code>boolean\|string</code></td>
+<td>true</td>
+<td>The F1 dialog lets the user click a combination and press their own. A string is used as the <code>localStorage</code> key (<code>true</code> means <code>webhotkeys.remap</code>), <code>false</code> turns the editing off.</td>
+</tr>
+<tr>
+<td><a href="#remap-onremap">onRemap</a></td>
+<td>function</td>
+<td>undefined</td>
+<td>Called with the whole remapping whenever the user changes a combination. Ex: store it on your server.</td>
+</tr>
+<tr>
+<td>mac</td>
+<td>boolean</td>
+<td>null</td>
+<td>Render the combinations the Apple way (⌘⌥⇧⌃) and resolve <code>Mod</code> to Meta. Null autodetects.</td>
+</tr>
+<tr>
+<td><a href="#warnconflicts">warnConflicts</a></td>
+<td>boolean</td>
+<td>false</td>
+<td>Console warn when a newly grabbed hotkey shadows an existing scope-less one.</td>
+</tr>
+<tr>
+<td>attribute</td>
+<td>string</td>
+<td><code>data-hotkey</code></td>
+<td>Attribute name to link DOM elements to shorcuts.</td>
+</tr>
+<tr>
+<td>groupAttribute</td>
+<td>string</td>
+<td><code>data-hotkey-group</code></td>
+<td>Attribute name to link DOM elements to shorcut groups.</td>
+</tr>
+<tr>
+<td><a href="#actionattribute">actionAttribute</a></td>
+<td>string</td>
+<td><code>data-hotkey-action</code></td>
+<td>Attribute name overriding what happens with the element: <code>click</code>, <code>focus</code>, <code>toggle</code>, <code>none</code>.</td>
+</tr>
+</tbody>
+</table>
+<p>Should you need to change a one-time variable like <code>helpKey</code>, you want to prevent the implicit <code>new WebHotkeys</code> creation. Then, create the object manually:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">wh</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">WebHotkeys</span><span class="p">({</span><span class="s2">"helpKey"</span><span class="o">:</span><span class="w"> </span><span class="kc">null</span><span class="p">})</span>
+</code></pre></div>
+<h2 id="inhidden"><code>inHidden</code></h2>
+<p>A hotkey linked to a hidden element (<code>display:none</code>, <code>[hidden]</code>, <code>[inert]</code>) does not fire; the next
+hotkey sharing the combination is tried instead. That is what you want when the element <em>is</em> the
+feature - a hidden panel must not swallow the keys of the visible one.</p>
+<p>It is not what you want when the element is a mere affordance of the hotkey - a toolbar that fades
+out, a menu that collapses, an off-screen cheat sheet. The keys are supposed to go on working while
+nothing of it shows. Turn the rule off page-wide:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">wh</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">WebHotkeys</span><span class="p">({</span><span class="w"> </span><span class="nx">inHidden</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">})</span>
+</code></pre></div>
+<p>or per hotkey, either way round:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nx">wh</span><span class="p">.</span><span class="nx">grab</span><span class="p">(</span><span class="s2">"Alt+s"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Save"</span><span class="p">,</span><span class="w"> </span><span class="nx">saveButton</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">inHidden</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">})</span><span class="w">  </span><span class="c1">// works while the toolbar is hidden</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nx">wh</span><span class="p">.</span><span class="nx">grab</span><span class="p">(</span><span class="s2">"Alt+p"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Print"</span><span class="p">,</span><span class="w"> </span><span class="nx">printButton</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">inHidden</span><span class="o">:</span><span class="w"> </span><span class="kc">false</span><span class="w"> </span><span class="p">})</span><span class="w"> </span><span class="c1">// ... this one does not</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="nx">myHotkey</span><span class="p">.</span><span class="nx">allowHidden</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="c1">// the same, set directly; null inherits the option</span>
+</code></pre></div>
+<p>A <strong>disabled</strong> element is skipped regardless - <code>disabled</code> says "not now", not "not shown".</p>
+<h2 id="ignore"><code>ignore</code></h2>
+<p>Selector or <code>callback(activeElement, event)</code>. While it matches, no hotkey fires at all - handy to
+suspend every hotkey while a third-party widget (a rich text editor, a game canvas) has focus.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">wh</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">WebHotkeys</span><span class="p">({</span><span class="w"> </span><span class="nx">ignore</span><span class="o">:</span><span class="w"> </span><span class="s2">"#rich-editor, [data-no-hotkeys]"</span><span class="w"> </span><span class="p">})</span>
+</code></pre></div>
+<h2 id="onmiss"><code>onMiss</code></h2>
+<p>Called when a keystroke matched no hotkey, receives <code>(event)</code>. Handy for debugging what a user
+just pressed, or for building your own fallback behavior.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nx">wh</span><span class="p">.</span><span class="nx">setOptions</span><span class="p">({</span><span class="w"> </span><span class="nx">onMiss</span><span class="o">:</span><span class="w"> </span><span class="nx">e</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="sb">`miss: </span><span class="si">${</span><span class="nx">e</span><span class="p">.</span><span class="nx">key</span><span class="si">}</span><span class="sb">`</span><span class="p">)</span><span class="w"> </span><span class="p">})</span>
+</code></pre></div>
+<h2 id="hint"><code>hint</code></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">wh</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">WebHotkeys</span><span class="p">({</span><span class="w"> </span><span class="nx">hint</span><span class="o">:</span><span class="w"> </span><span class="s2">"text"</span><span class="w"> </span><span class="p">})</span><span class="w"> </span><span class="c1">// append the combination to the element's text instead of its title</span>
+</code></pre></div>
+<h2 id="hintkey"><code>hintKey</code></h2>
+<p>Key combination toggling the visual badges over every element having a hotkey. Bound to <code>F2</code> by
+default; change it or turn it off:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">wh</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">WebHotkeys</span><span class="p">({</span><span class="w"> </span><span class="nx">hintKey</span><span class="o">:</span><span class="w"> </span><span class="s2">"Alt+h"</span><span class="w"> </span><span class="p">})</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">wh</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">WebHotkeys</span><span class="p">({</span><span class="w"> </span><span class="nx">hintKey</span><span class="o">:</span><span class="w"> </span><span class="kc">null</span><span class="w"> </span><span class="p">})</span><span class="w"> </span><span class="c1">// grab nothing, call wh.toggleHints() yourself</span>
+</code></pre></div>
+<h2 id="helpkey"><code>helpKey</code></h2>
+<p>Key combination that opens the help dialog/alert. Bound to <code>F1</code> by default:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">wh</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">WebHotkeys</span><span class="p">({</span><span class="w"> </span><span class="nx">helpKey</span><span class="o">:</span><span class="w"> </span><span class="kc">null</span><span class="w"> </span><span class="p">})</span><span class="w"> </span><span class="c1">// grab nothing, call wh.toggleHelp() yourself</span>
+</code></pre></div>
+<h2 id="remap-onremap"><code>remap</code>, <code>onRemap</code></h2>
+<p>Storage is governed solely by the <code>remap</code> option (a string is used as the <code>localStorage</code> key,
+<code>true</code> means <code>webhotkeys.remap</code>, <code>false</code> turns it off). <code>onRemap</code> is called with the whole
+remapping whenever the user changes a combination:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">wh</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">WebHotkeys</span><span class="p">({</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">    </span><span class="nx">remap</span><span class="o">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w"> </span><span class="c1">// no localStorage, this app keeps the layout with the user account</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">    </span><span class="nx">onRemap</span><span class="o">:</span><span class="w"> </span><span class="nx">map</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">fetch</span><span class="p">(</span><span class="s2">"/preferences"</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="nx">method</span><span class="o">:</span><span class="w"> </span><span class="s2">"POST"</span><span class="p">,</span><span class="w"> </span><span class="nx">body</span><span class="o">:</span><span class="w"> </span><span class="nb">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">map</span><span class="p">)})</span>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="p">})</span>
+</code></pre></div>
+<p>See <a href="../help-remapping/">Help &amp; remapping</a> for the full <code>remapping()</code> API.</p>
+<h2 id="observe"><code>observe</code></h2>
+<p>Monitors DOM changes with a single page-wide <code>MutationObserver</code>. Automatically un/grab hotkeys as
+<code>[data-hotkey]</code> elements (or their <code>[data-hotkey-group]</code> ancestors) are added, removed, or have the
+attribute mutated - this lets <code>data-hotkey</code> be added/removed dynamically without calling
+<code>grab</code>/<code>disable</code> manually. Turn it off if you manage the DOM yourself and want to save the observer:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">wh</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">WebHotkeys</span><span class="p">({</span><span class="w"> </span><span class="nx">observe</span><span class="o">:</span><span class="w"> </span><span class="kc">false</span><span class="w"> </span><span class="p">})</span>
+</code></pre></div>
+<h2 id="actionattribute"><code>actionAttribute</code></h2>
+<p>Attribute name overriding what happens with a <code>[data-hotkey]</code> element: <code>click</code>, <code>focus</code>, <code>toggle</code>,
+<code>none</code>.</p>
+<p>The default is chosen from the element itself and covers the common cases without the attribute:</p>
+<table>
+<thead>
+<tr>
+<th>Element</th>
+<th>Default</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>text <code>input</code>, <code>textarea</code>, <code>select</code></td>
+<td><code>focus</code></td>
+<td>the user wants to type there, not to click it</td>
+</tr>
+<tr>
+<td><code>input[type=range\|color]</code></td>
+<td><code>focus</code></td>
+<td>the arrows adjust it once focused</td>
+</tr>
+<tr>
+<td><code>input[type=checkbox\|radio\|submit\|button\|reset\|image\|file]</code></td>
+<td><code>click</code></td>
+<td>a mere focus would leave the control untouched</td>
+</tr>
+<tr>
+<td><code>details</code></td>
+<td><code>toggle</code></td>
+<td>the native toggle sits on the <code>summary</code>, clicking the <code>details</code> does nothing</td>
+</tr>
+<tr>
+<td>anything else (<code>button</code>, <code>a</code>, <code>div</code>...)</td>
+<td><code>click</code></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>A checkbox is flipped by the click itself, and a radio also takes the focus, so the arrows may go on
+choosing within its group.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="p">&lt;</span><span class="nt">input</span> <span class="na">data-hotkey</span><span class="o">=</span><span class="s">"Alt+t"</span> <span class="na">data-hotkey-action</span><span class="o">=</span><span class="s">"focus"</span> <span class="na">type</span><span class="o">=</span><span class="s">"submit"</span> <span class="na">value</span><span class="o">=</span><span class="s">"Save"</span><span class="p">&gt;</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="p">&lt;</span><span class="nt">div</span> <span class="na">data-hotkey</span><span class="o">=</span><span class="s">"Alt+x"</span> <span class="na">data-hotkey-action</span><span class="o">=</span><span class="s">"none"</span><span class="p">&gt;</span>Hinted in the help, does nothing on its own<span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+</code></pre></div>
+<h2 id="warnconflicts"><code>warnConflicts</code></h2>
+<p>Console warn when a newly grabbed hotkey shadows an existing scope-less one, right away instead of
+having to call <a href="../debugging/#method-getconflicts"><code>getConflicts()</code></a> yourself. It also warns when a
+plain hotkey and a longer <a href="../hotkeys/">sequence</a> share their first key (ex: <code>g</code> next to <code>g i</code>) - the
+plain one still works, but only fires after a <code>sequenceTimeout</code> delay, which is easy to miss without
+the warning:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">wh</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">WebHotkeys</span><span class="p">({</span><span class="w"> </span><span class="nx">warnConflicts</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">})</span>
+</code></pre></div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": [], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
