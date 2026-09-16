@@ -322,6 +322,146 @@ test('a hidden element does not swallow its hotkey', () => {
     assert.strictEqual(fallback, 1)
 })
 
+const hiddenEl = () => Object.assign(new FakeHTMLElement("BUTTON"), {
+    getClientRects: () => [], offsetWidth: 0, offsetHeight: 0
+})
+
+test('the inHidden option lets a hidden element keep its hotkey', () => {
+    const wh = fresh({ inHidden: true })
+    const el = hiddenEl()
+    let fallback = 0
+    wh.grab("Alt+h", "Fallback", () => fallback++)
+    wh.grab("Alt+h", "Hidden button", el) // the latest grab is tried first
+    wh.simulate("Alt+h")
+    assert.strictEqual(el.clicked, 1, "the button is a mere affordance of the hotkey, not a gate")
+    assert.strictEqual(fallback, 0)
+})
+
+test('inHidden is overridable per hotkey, both ways', () => {
+    const wh = fresh({ inHidden: true })
+    const strict = hiddenEl()
+    const lenient = hiddenEl()
+    wh.grab("Alt+h", "Strict", strict, { inHidden: false })
+    wh.grab("Alt+j", "Lenient", lenient)
+    wh.simulate("Alt+h")
+    wh.simulate("Alt+j")
+    assert.strictEqual(strict.clicked, 0)
+    assert.strictEqual(lenient.clicked, 1)
+
+    const off = fresh({ inHidden: false })
+    const el = hiddenEl()
+    off.grab("Alt+k", "Opted in", el, { inHidden: true })
+    off.simulate("Alt+k")
+    assert.strictEqual(el.clicked, 1)
+})
+
+test('a disabled element is skipped even with inHidden', () => {
+    const wh = fresh({ inHidden: true })
+    const el = Object.assign(hiddenEl(), { disabled: true })
+    let fallback = 0
+    wh.grab("Alt+h", "Fallback", () => fallback++)
+    wh.grab("Alt+h", "Disabled", el)
+    wh.simulate("Alt+h")
+    assert.strictEqual(el.clicked, 0)
+    assert.strictEqual(fallback, 1, "disabled still means 'not now'")
+})
+
+//
+// Displacing
+//
+
+test('displace() moves the hotkey behind a modifier and back', () => {
+    const wh = fresh()
+    let seeks = 0
+    const hotkey = wh.grab("Digit1", "Seek to 10 %", () => seeks++)
+
+    hotkey.displace("Shift")
+    assert.strictEqual(hotkey.combination, "Shift+1")
+    wh._trigger({ key: "1", code: "Digit1", preventDefault() { }, stopPropagation() { } })
+    assert.strictEqual(seeks, 0, "the bare key is free now")
+    wh._trigger({ key: "!", code: "Digit1", shiftKey: true, preventDefault() { }, stopPropagation() { } })
+    assert.strictEqual(seeks, 1)
+
+    hotkey.displace(null)
+    assert.strictEqual(hotkey.combination, "1")
+    wh.simulate({ key: "1", code: "Digit1" })
+    assert.strictEqual(seeks, 2)
+})
+
+test('displacing is not a remapping', () => {
+    const wh = fresh({ remap: true })
+    const hotkey = wh.grab("Digit1", "Seek", () => { })
+    hotkey.displace("Shift")
+    assert.deepEqual(wh.remapping(), {}, "the user has not changed anything")
+    assert.strictEqual(sandbox.localStorage.getItem("webhotkeys.remap"), null)
+})
+
+test('displace() respects what the user remapped and returns there', () => {
+    const wh = fresh()
+    const hotkey = wh.grab("Digit1", "Seek", () => { })
+    hotkey.rebind("KeyQ") // the user's own choice
+    hotkey.displace("Alt")
+    assert.strictEqual(hotkey.combination, "Alt+KeyQ")
+    hotkey.displace(null)
+    assert.strictEqual(hotkey.combination, "KeyQ", "not back to the default, back to the user's")
+})
+
+test('a hotkey already holding the modifier stays where it is', () => {
+    const wh = fresh()
+    const rotate = wh.grab("Shift+r", "Rotate left", () => { })
+    rotate.displace("Shift")
+    assert.strictEqual(rotate.combination, "Shift+r", "prefixing would only collide with a neighbour")
+    rotate.displace(null)
+    assert.strictEqual(rotate.combination, "Shift+r")
+})
+
+test('displace() prefixes the entry key of a sequence and is idempotent', () => {
+    const wh = fresh()
+    const hotkey = wh.grab("g i", "Go to issues", () => { })
+    hotkey.displace("Alt").displace("Alt")
+    assert.strictEqual(hotkey.combination, "Alt+g i")
+    hotkey.displace(null)
+    assert.strictEqual(hotkey.combination, "g i")
+})
+
+test('a group displaces as a whole, a filtered part on its own', () => {
+    const wh = fresh()
+    const group = wh.group("Media", [
+        ["Digit1", "Seek to 10 %", () => { }],
+        ["Digit2", "Seek to 20 %", () => { }],
+        ["KeyR", "Rotate", () => { }],
+    ])
+    group.filter(h => h.hint.startsWith("Seek")).displace("Shift")
+    assert.deepEqual(group.map(h => h.combination), ["Shift+1", "Shift+2", "KeyR"])
+    group.displace(null)
+    assert.deepEqual(group.map(h => h.combination), ["1", "2", "KeyR"])
+})
+
+test('a user remapping while displaced becomes the new base', () => {
+    const wh = fresh()
+    const hotkey = wh.grab("Digit1", "Seek", () => { })
+    hotkey.displace("Shift")
+    hotkey.rebind("KeyQ") // the user picks a combination in the help dialog
+    assert.strictEqual(hotkey.combination, "KeyQ")
+    hotkey.displace("Shift")
+    assert.strictEqual(hotkey.combination, "Shift+KeyQ")
+})
+
+test('displace() warns and does nothing when given something else than a modifier', () => {
+    const wh = fresh()
+    const hotkey = wh.grab("Digit1", "Seek", () => { })
+    const warns = []
+    const original = console.warn
+    console.warn = msg => warns.push(msg)
+    try {
+        hotkey.displace("Banana")
+    } finally {
+        console.warn = original
+    }
+    assert.strictEqual(hotkey.combination, "1")
+    assert.strictEqual(warns.length, 1)
+})
+
 test('a submit button is clicked, not merely focused', () => {
     const wh = fresh()
     const submit = Object.assign(new FakeHTMLElement("INPUT"), { type: "submit" })

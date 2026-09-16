@@ -63,7 +63,7 @@ Start listening to a hotkey. Specify hint and callback to be triggered on hit. R
 * `action` (`{string|HTMLElement|Function}`): What will happen on hotkey trigger.
      *  If action returns false, hotkey will be treated as non-existent and event will propagate further.
      *  If action is a HTMLElement or its string selector, its click or focus method (form elements) is invoked instead.
-* `scope` (`{HTMLElement|string|Function}|{scope, inInput, group}`): Scope within the hotkey is allowed to be launched, or an options object.
+* `scope` (`{HTMLElement|string|Function}|{scope, inInput, inHidden, group}`): Scope within the hotkey is allowed to be launched, or an options object.
      *  The scope can be an HTMLElement that the active element is being search under when the hotkey triggers.
      *  The scope can an HTMLElement selector, does not have to exist at the shorcut definition time.
      *  The scope can be a function, resolved at the keystroke time. True means the scope matches. That way, you can implement negative scope.

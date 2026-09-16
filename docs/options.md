@@ -13,6 +13,7 @@ The constructor (and `setOptions`) accepts an options object:
 | onToggle | function| undefined | When having a DOM element linked, run this callback on hotkey toggle. This will be set to the hotkey, first parameter being the element, second boolean whether it got enabled. |
 | onTrigger | function| undefined | Called right after a hotkey fired, receives `(hotkey, event)`. Handy for logging. |
 | [onMiss](#onmiss) | function| undefined | Called when a keystroke matched no hotkey, receives `(event)`. Handy for debugging. |
+| [inHidden](#inhidden) | boolean | false | Let a hotkey fire even when its linked element is hidden. Overridable per hotkey. |
 | [ignore](#ignore) | `string\|function` | null | Selector or `callback(activeElement, event)`. While it matches, no hotkey fires at all. |
 | sequenceTimeout | number | 1000 | Milliseconds a key sequence (`'g i'`) may be spread over. Also the pause that commits a combination recorded in the help dialog. |
 | [remap](#remap-onremap) | `boolean\|string` | true | The F1 dialog lets the user click a combination and press their own. A string is used as the `localStorage` key (`true` means `webhotkeys.remap`), `false` turns the editing off. |
@@ -28,6 +29,30 @@ Should you need to change a one-time variable like `helpKey`, you want to preven
 ```javascript
 const wh = new WebHotkeys({"helpKey": null})
 ```
+
+## `inHidden`
+
+A hotkey linked to a hidden element (`display:none`, `[hidden]`, `[inert]`) does not fire; the next
+hotkey sharing the combination is tried instead. That is what you want when the element *is* the
+feature - a hidden panel must not swallow the keys of the visible one.
+
+It is not what you want when the element is a mere affordance of the hotkey - a toolbar that fades
+out, a menu that collapses, an off-screen cheat sheet. The keys are supposed to go on working while
+nothing of it shows. Turn the rule off page-wide:
+
+```javascript
+const wh = new WebHotkeys({ inHidden: true })
+```
+
+or per hotkey, either way round:
+
+```javascript
+wh.grab("Alt+s", "Save", saveButton, { inHidden: true })  // works while the toolbar is hidden
+wh.grab("Alt+p", "Print", printButton, { inHidden: false }) // ... this one does not
+myHotkey.allowHidden = true // the same, set directly; null inherits the option
+```
+
+A **disabled** element is skipped regardless - `disabled` says "not now", not "not shown".
 
 ## `ignore`
 

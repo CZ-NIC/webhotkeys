@@ -1,3 +1,7 @@
+# 1.1.0 (unreleased)
+feat: `hotkey.displace('Shift')` / `group.displace('Shift')` temporarily moves a hotkey (or a whole group) behind a modifier while a mode of the application needs its bare combination; `displace()` puts it back. Unlike `rebind`, it never enters the user remapping.
+feat: `inHidden` option (and `grab(..., {inHidden: true})` / `hotkey.allowHidden`) lets a hotkey fire even when its linked element is hidden - for the elements that are mere affordances of the hotkey, ex. a toolbar that fades out.
+
 # 1.0.0 (2026-09-11)
 feat: `wh.grid(rowQuery, cellQuery, options)` - 2D keyboard navigation over a table (Up/Down keep the column and move between rows, Left/Right move within a row, `grid.go(rows, cols)` programmatically). Every call returns its own independent instance, so several tables can coexist on the same page (give each a `scope` so their arrow keys don't collide).
 feat: key sequences (`g i`) and double taps (`Shift Shift`).

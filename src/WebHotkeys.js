@@ -14,6 +14,7 @@
  * @property {string} [attribute='data-hotkey']  Attribute name to link DOM elements to shorcuts.
  * @property {string} [groupAttribute='data-hotkey-group']  Attribute name to link DOM elements to shorcut groups.
  * @property {string} [actionAttribute='data-hotkey-action']  Attribute name to override what happens with the element ('click', 'focus', 'toggle', 'none'). Without it a text field is focused, a button/checkbox/radio clicked and a DETAILS toggled. @see defaultAction
+ * @property {boolean} [inHidden=false] Let a hotkey fire even when its linked element is hidden. The default skips it, so a hidden panel does not swallow the combination; set it when the elements are mere affordances of the hotkeys (a fading toolbar). Overridable per hotkey. @see Hotkey.allowHidden
  * @property {?string|?function} [ignore=null]  Selector or callback(activeElement, event). When it matches, no hotkey is triggered at all.
  * @property {number} [sequenceTimeout=1000]  Milliseconds a key sequence ('g i') may be spread over. Also how long the F1 dialog waits before committing a recorded sequence.
  * @property {boolean|string} [remap=true]  The F1 dialog lets the user click a combination and press their own. A string is used as the localStorage key (true means 'webhotkeys.remap'), false turns the editing off.
@@ -26,7 +27,7 @@ const WebHotkeysDefaults = {
     replaceAccesskeys: true, helpKey: "F1", help: "dialog", hintKey: "F2",
     attribute: "data-hotkey", groupAttribute: "data-hotkey-group", actionAttribute: "data-hotkey-action",
     observe: true, onToggle: null, onTrigger: null, onMiss: null, hint: "title",
-    ignore: null, sequenceTimeout: 1000, mac: null, warnConflicts: false,
+    ignore: null, sequenceTimeout: 1000, mac: null, warnConflicts: false, inHidden: false,
     remap: true, onRemap: null
 }
 
@@ -119,6 +120,12 @@ class Hotkey {
         this.wh = wh
         /** @type {boolean} Fire even when the user is typing into an input. @see allowInput */
         this.allowInput = false
+        /** @type {?boolean} Fire even when the linked element is hidden. Null inherits the `inHidden` option. */
+        this.allowHidden = null
+        /** @type {?string} The modifier the hotkey currently sits behind. @see displace */
+        this._displaced = null
+        /** @type {?KeyEvent[]} Where a displaced hotkey returns to. */
+        this._base = null
         /** @type {string} The combination the hotkey was grabbed with. Survives `rebind`, hence remapping. */
         this.defaultCombination = this.combination
         /** @type {?HTMLElement} The hotkey is linked to this DOM element. */
@@ -282,15 +289,11 @@ class Hotkey {
      * @returns {Hotkey}
      */
     rebind(combination = null, store = true) {
-        const was = this.enabled
-        const previousClue = this.clue
-        this.disable()
-        this.sequence = this.wh._parseSequence(combination || this.defaultCombination)
-        this.event = this.sequence[this.sequence.length - 1]
-        this._hintElement(previousClue)
-        if (was) {
-            this.enable()
-        }
+        // Relocating the hotkey outright ends any displacement; the new place becomes the base
+        // a following `displace` puts its modifier on.
+        this._displaced = null
+        this._base = null
+        this._applySequence(this.wh._parseSequence(combination || this.defaultCombination))
         if (store) {
             const current = this.combination
             if (current === this.defaultCombination) {
@@ -301,6 +304,63 @@ class Hotkey {
             this.wh._saveRemapping()
         }
         return this
+    }
+
+    /**
+     * Put the hotkey on another sequence, keeping the enabled state and the element hint in sync.
+     * The sequence is already parsed - unlike a combination string, it never loses the `Digit1` /
+     * `1` distinction, which matters when a displaced hotkey has to coexist with its bare key.
+     * @param {KeyEvent[]} sequence
+     */
+    _applySequence(sequence) {
+        const was = this.enabled
+        const previousClue = this.clue
+        this.disable()
+        this.sequence = sequence
+        this.event = sequence[sequence.length - 1]
+        this._hintElement(previousClue)
+        if (was) {
+            this.enable()
+        }
+        return this
+    }
+
+    /**
+     * Move the hotkey behind a modifier for as long as something else needs its bare combination,
+     * ex. a mode of the application took the digits over. Unlike `rebind`, this is the program's
+     * doing, not the user's: it never enters the remapping and `displace(null)` puts the hotkey back
+     * to wherever it sat before (the user's remapped combination, or the default).
+     * Only the first combination of a sequence is prefixed - that is the one clashing.
+     * A hotkey already holding the modifier stays where it is.
+     * @param {?Key} modifier 'Shift', 'Alt', 'Ctrl', 'Meta' or 'Mod'. Nothing (or null) puts the hotkey back.
+     * @returns {Hotkey}
+     */
+    displace(modifier = null) {
+        modifier = modifier || null
+        if (this._displaced === modifier) {
+            return this
+        }
+        if (!modifier) {
+            const base = this._base
+            this._displaced = null
+            this._base = null
+            return base ? this._applySequence(base) : this
+        }
+        // Resolved through the aliases - 'Ctrl'/'Control', or 'Mod' (Meta on a Mac, Control elsewhere).
+        let name = MODIFIER_ALIASES[String(modifier).toLowerCase()]
+        if (name === "Mod") {
+            name = this.wh.isMac() ? "Meta" : "Control"
+        }
+        const flag = { Shift: "shiftKey", Alt: "altKey", Control: "ctrlKey", Meta: "metaKey" }[name]
+        if (!flag) {
+            console.warn(`WebHotkeys.js> displace: '${modifier}' is not a modifier`)
+            return this
+        }
+        const base = this._base ||= this.sequence // where to return to; captured before the first move
+        this._displaced = modifier
+        // A combination already holding the modifier has nothing to free - prefixing it would only
+        // collide with whatever legitimately sits on the doubled combination.
+        return base[0][flag] ? this : this._applySequence([{ ...base[0], [flag]: true }, ...base.slice(1)])
     }
 
     _enable() {
@@ -373,6 +433,14 @@ class HotkeyGroup extends Array {
      */
     toggle(enable = null) {
         this.forEach(hotkey => hotkey.toggle(enable))
+        return this
+    }
+    /**
+     * Move every hotkey of the group behind a modifier (`null` puts them back). @see Hotkey.displace
+     * @param {?Key} modifier
+     */
+    displace(modifier = null) {
+        this.forEach(hotkey => hotkey.displace(modifier))
         return this
     }
     /** Forget all the hotkeys of the group. @see Hotkey.remove */
@@ -611,25 +679,28 @@ class WebHotkeys {
      * @param {Action} action  What will happen on hotkey trigger.
      *   If action returns false, hotkey will be treated as non-existent and event will propagate further.
      *   If action is a HTMLElement or its string selector, its click or focus method (form elements) is invoked instead.
-     * @param {?Action|{scope: ?Action, inInput: ?boolean, group: ?string}} scope Scope within the hotkey is allowed to be launched,
-     *  or an options object `{scope, inInput, group}`.
+     * @param {?Action|{scope: ?Action, inInput: ?boolean, inHidden: ?boolean, group: ?string}} scope Scope within the hotkey is allowed to be launched,
+     *  or an options object `{scope, inInput, inHidden, group}`.
      *  The scope can be an HTMLElement that the active element is being search under when the hotkey triggers.
      *  The scope can an HTMLElement selector, does not have to exist at the shorcut definition time.
      *  The scope can be a function, resolved at the keystroke time. True means the scope matches. That way, you can implement negative scope.
      *  (Ex: down arrow should work unless there is DialogOverlay in the document root.)
      *  `inInput: true` fires the hotkey even while the user is typing into an input or a contenteditable
      *  (ex: arrow keys navigating a combobox's suggestion list). @see Hotkey.allowInput
+     *  `inHidden` overrides the `inHidden` option for this single hotkey. @see Hotkey.allowHidden
      *  `group` adds the hotkey to a named `HotkeyGroup` (same as `wh.group(name, [[...]])` would).
      * @returns {Hotkey}
      */
     grab(hotkey, hint, action, scope = null) {
         let inInput = false
+        let inHidden = null
         let group = null
         // An options object `{scope, inInput, group}`, not a plain scope. Checked by prototype chain depth,
         // not `typeof` (an HTMLElement/selector-result is an object too) nor `=== Object.prototype`
         // (breaks across realms, ex: a test running WebHotkeys.js inside a `vm` context).
         if (scope && typeof scope === "object" && Object.getPrototypeOf(Object.getPrototypeOf(scope) ?? {}) === null) {
             inInput = scope.inInput ?? false
+            inHidden = scope.inHidden ?? null
             group = scope.group ?? null
             scope = scope.scope ?? null
         }
@@ -648,6 +719,7 @@ class WebHotkeys {
         // register hotkey and set the hint to the DOM
         const hotkeyO = new Hotkey(action, hint, scope, this._parseSequence(hotkey), this)
         hotkeyO.allowInput = inInput
+        hotkeyO.allowHidden = inHidden
 
         // The user may have remapped this very combination in a previous session (or in another
         // view that has been unmounted since) – honour it right away, before anyone sees the hint.
@@ -1095,7 +1167,7 @@ class WebHotkeys {
 
         let result
         if (element) {
-            if (element.disabled || !isVisible(element)) {
+            if (element.disabled || (!isVisible(element) && !(hotkey.allowHidden ?? this.options.inHidden))) {
                 return false // action is a disabled or hidden HTMLElement, try next shorcut
             }
             // note that result is always none

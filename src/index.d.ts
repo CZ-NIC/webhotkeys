@@ -54,6 +54,10 @@ export interface WebHotkeysOptions {
     mac?: boolean | null
     /** Warn in the console when a newly grabbed hotkey shadows a scope-less one. */
     warnConflicts?: boolean
+    /** Let a hotkey fire even when its linked element is hidden. The default skips it, so a hidden
+     *  panel does not swallow the combination; set it when the elements are mere affordances of the
+     *  hotkeys (a fading toolbar). Overridable per hotkey. @default false */
+    inHidden?: boolean
 }
 
 export declare class Hotkey {
@@ -68,6 +72,8 @@ export declare class Hotkey {
     enabled: boolean
     /** Fires even while the user is typing. Set via `grab(..., {inInput: true})`, or directly. */
     allowInput: boolean
+    /** Fires even while the linked element is hidden. Null inherits the `inHidden` option. */
+    allowHidden: boolean | null
     /** The combination the hotkey was grabbed with; survives `rebind`. */
     defaultCombination: Key
 
@@ -79,6 +85,9 @@ export declare class Hotkey {
     readonly text: string
     /** Move the hotkey to another combination (user remapping). No argument = back to the default. */
     rebind(combination?: Key | null): this
+    /** Temporarily put the hotkey behind a modifier ("Shift", "Alt", "Ctrl", "Meta", "Mod"), ex. while
+     *  a mode of the application needs its bare key. No argument = back where it sat. Not a remapping. */
+    displace(modifier?: Key | null): this
     enable(): this
     disable(): this
     toggle(enable?: boolean | null): this
@@ -94,6 +103,8 @@ export declare class HotkeyGroup extends Array<Hotkey> {
     enable(): this
     disable(): this
     toggle(enable?: boolean | null): this
+    /** Put every hotkey of the group behind a modifier (no argument = back). @see Hotkey.displace */
+    displace(modifier?: Key | null): this
     remove(): this
 }
 
@@ -165,8 +176,8 @@ export declare class WebHotkeys {
     /** Detach the listener and the observer, forget every hotkey. */
     destroy(): this
 
-    grab(hotkey: Key, hint: string, action: Action, scope?: Scope | { scope?: Scope | null, inInput?: boolean, group?: string | null } | null): Hotkey
-    group(name: string, definitions?: Array<[Key, string, Action, (Scope | { scope?: Scope | null, inInput?: boolean, group?: string | null } | null)?]>): HotkeyGroup
+    grab(hotkey: Key, hint: string, action: Action, scope?: Scope | { scope?: Scope | null, inInput?: boolean, inHidden?: boolean, group?: string | null } | null): Hotkey
+    group(name: string, definitions?: Array<[Key, string, Action, (Scope | { scope?: Scope | null, inInput?: boolean, inHidden?: boolean, group?: string | null } | null)?]>): HotkeyGroup
     /** Every call returns its own independent instance, so several lists can coexist on one page. */
     list(query?: string, options?: ListOptions): HotkeyList
     /** 2D keyboard navigation over a table (rows × cells within a row). Every call returns its own
