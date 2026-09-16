@@ -1,6 +1,6 @@
 {
   "name": "webhotkeys",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Easy solution to integrate keyboard hotkeys into the webpage.",
   "main": "src/WebHotkeys.js",
   "files": [

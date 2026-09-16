@@ -1,4 +1,4 @@
-# 1.1.0 (unreleased)
+# 1.1.0 (2026-09-16)
 feat: `hotkey.displace('Shift')` / `group.displace('Shift')` temporarily moves a hotkey (or a whole group) behind a modifier while a mode of the application needs its bare combination; `displace()` puts it back. Unlike `rebind`, it never enters the user remapping.
 feat: `inHidden` option (and `grab(..., {inHidden: true})` / `hotkey.allowHidden`) lets a hotkey fire even when its linked element is hidden - for the elements that are mere affordances of the hotkey, ex. a toolbar that fades out.
 
