@@ -505,6 +505,20 @@ test('a DETAILS opens by default - clicking it would do nothing', () => {
     assert.strictEqual(details.open, false)
 })
 
+test('a focused range keeps Left/Right/Home/End, Up/Down and letters stay hotkeys', () => {
+    const wh = fresh()
+    const fired = []
+    for (const key of ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "j"]) {
+        wh.grab(key, key, () => fired.push(key))
+    }
+    sandbox.document.activeElement = Object.assign(new FakeHTMLElement("INPUT"), { type: "range" })
+    for (const key of ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "j"]) {
+        wh.simulate(key)
+    }
+    assert.deepStrictEqual(fired, ["ArrowUp", "ArrowDown", "j"], "the thumb moves along its axis, the rest is the page's")
+    sandbox.document.activeElement = null
+})
+
 test('a focused radio does not swallow the letter hotkeys', () => {
     const wh = fresh()
     let fired = 0

@@ -56,7 +56,7 @@ Start listening to a hotkey. Specify hint and callback to be triggered on hit. R
 
     **The numeric keypad** falls back to the main row: a hotkey grabbed as `Digit1` or `Enter` fires from `Numpad1` / `NumpadEnter` as well, unless another hotkey claims the numpad code explicitly.
 
-    **Text-input guard.** We try to determine whether a hotkey should not be triggered - for example, when pressing keys like `a` or `Delete` inside an `<input>` field, which wouldn't make sense. This guards plain letter keys, text-navigation keys (arrows, Home/End, Delete, Backspace) and Enter/Tab while focus is inside a form field or `contenteditable`. `Escape`, function keys (`F2`, ...) and `Ctrl`/`Alt`/`Meta` combinations are **not** guarded - they still fire inside a text field.
+    **Text-input guard.** We try to determine whether a hotkey should not be triggered - for example, when pressing keys like `a` or `Delete` inside an `<input>` field, which wouldn't make sense. This guards plain letter keys, text-navigation keys (arrows, Home/End, Delete, Backspace) and Enter/Tab while focus is inside a form field or `contenteditable`. `Escape`, function keys (`F2`, ...) and `Ctrl`/`Alt`/`Meta` combinations are **not** guarded - they still fire inside a text field. A focused range input (a slider) keeps Left/Right/Home/End to move its thumb; Up/Down and letters stay hotkeys.
 
     Some special hotkeys like `Ctrl+PageDown` will likely never be passed to the webpage and therefore do not function.
 * `hint` (`string`): Text shown in the help dialog and hint badges.

@@ -57,6 +57,13 @@ const DEFAULT_STORAGE_KEY = "webhotkeys.remap"
 const FORM_TAGS = ["INPUT", "SELECT", "TEXTAREA"]
 /** Input types that are not a text field - they never eat a letter key, so the text guard must not stand back for them. */
 const NON_TEXT_INPUT_TYPES = ["checkbox", "radio", "submit", "button", "reset", "image", "file", "range", "color"]
+/**
+ * Keys that a control which is no text field still handles itself. A range moves its thumb with
+ * Left/Right/Home/End, so these must not trigger a hotkey (ex: a grid stepping to the next cell).
+ * Up/Down stay free on purpose: a horizontal slider is reached for along its own axis, and in a
+ * grid the vertical arrows are what gets the user out of the cell again.
+ */
+const CONTROL_KEYS = { range: ["ArrowLeft", "ArrowRight", "Home", "End"] }
 /** Input types a hotkey should activate instead of merely focusing (a range or a color still wants the focus - the arrows adjust it). */
 const CLICKABLE_INPUT_TYPES = ["checkbox", "radio", "submit", "button", "reset", "image", "file"]
 /** Is the element a text field, ie. would a letter key land in it? (A SELECT counts - letters do its typeahead.) */
@@ -1024,6 +1031,10 @@ class WebHotkeys {
      * @returns {boolean}
      */
     _isTextContext(e, active) {
+        const controlKeys = active?.tagName === "INPUT" && CONTROL_KEYS[active.type]
+        if (controlKeys) {
+            return !e.altKey && !e.metaKey && !e.ctrlKey && controlKeys.includes(e.key)
+        }
         return !e.altKey
             && !e.metaKey
             && (// this is a mere letter (not Escape, F1... which anticipate a hotkey)
@@ -1848,6 +1859,10 @@ class _Grid {
     /**
      * Locate the currently selected cell, its row and its column index. Falls back to the grid's
      * very first cell when nothing currently matches `currentSelector`.
+     *
+     * With a `:focus` selector, a cell also counts when the focus sits on something inside it - a
+     * checkbox or a slider in the cell. Otherwise an arrow pressed there would not know where it
+     * is and jump to the very first cell.
      * @returns {boolean} A cell (hence a position) has been found.
      */
     _loadPosition() {
@@ -1855,10 +1870,11 @@ class _Grid {
         if (!this.rows.length) {
             return false
         }
+        const focusWithin = this.currentSelector.indexOf(":focus") === 0 && this._wh.activeElement()
         for (let r = 0; r < this.rows.length; r++) {
             const cells = this.rows[r].querySelectorAll(this.cellQuery)
             for (let c = 0; c < cells.length; c++) {
-                if (cells[c].matches(this.currentSelector)) {
+                if (cells[c].matches(this.currentSelector) || (focusWithin && cells[c].contains?.(focusWithin))) {
                     this.rowIndex = r
                     this.colIndex = c
                     this.selected = cells[c]

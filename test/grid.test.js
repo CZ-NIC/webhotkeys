@@ -58,6 +58,12 @@ class FakeElement {
         return null
     }
     getAttribute() { return null }
+    contains(other) {
+        for (let el = other; el; el = el.parent) {
+            if (el === this) { return true }
+        }
+        return false
+    }
     scrollIntoView() { }
     focus() { activeElement = this }
 }
@@ -191,3 +197,22 @@ test('two independent grid() instances (two tables) do not steal each other\'s a
     wh.destroy()
 })
 
+
+test('focus inside a cell (a slider, a checkbox) still counts as that cell', () => {
+    activeElement = null
+    const { table, trs } = buildTable("t", 3, 3)
+    const { WebHotkeys } = loadWebHotkeys(table)
+    const wh = new WebHotkeys({ observe: false, helpKey: null, hintKey: null })
+    const grid = wh.grid("tr", "td")
+    const slider = trs[1].children[2].appendChild(new FakeElement("input"))
+    slider.focus()
+
+    grid.go(1)
+    assert.strictEqual(activeElement, trs[2].children[2], "Down from the slider goes to the cell below it, not to the first cell")
+    slider.focus()
+    grid.go(-1)
+    assert.strictEqual(activeElement, trs[0].children[2])
+
+    grid.destroy()
+    wh.destroy()
+})

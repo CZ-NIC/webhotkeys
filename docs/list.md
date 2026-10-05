@@ -46,7 +46,7 @@ const rows = wh.grid("table.dbtable tr", "td", {
 
 | Option | Description |
 |--------|-------------|
-| `current` (`':focus'`) | The selector marking the current cell. |
+| `current` (`':focus'`) | The selector marking the current cell. With `:focus`, a cell also counts when the focus is on something inside it (a checkbox, a slider), so the arrows go on from there. |
 | `wrap` (`false`) | Wrap around row/column edges instead of stopping there. |
 | `scroll` (`true`) | Scroll the selected cell into the view. |
 | `onChange` | Called with `(newEl, oldEl)` before the change; returning `false` cancels it. |

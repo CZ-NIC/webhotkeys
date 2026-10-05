@@ -1,3 +1,7 @@
+# 1.1.1 (unreleased)
+fix: `grid()` lost its place when the focus was on an element inside a cell (a checkbox, a slider): an arrow pressed there jumped to the very first cell. With the default `current: ':focus'`, the cell holding the focus counts as the current one.
+fix: a focused range input (slider) keeps Left/Right/Home/End to move its thumb - a grid or any other arrow hotkey used to take them. Up/Down stay hotkeys, so a grid can still leave the cell.
+
 # 1.1.0 (2026-09-16)
 feat: `hotkey.displace('Shift')` / `group.displace('Shift')` temporarily moves a hotkey (or a whole group) behind a modifier while a mode of the application needs its bare combination; `displace()` puts it back. Unlike `rebind`, it never enters the user remapping.
 feat: `inHidden` option (and `grab(..., {inHidden: true})` / `hotkey.allowHidden`) lets a hotkey fire even when its linked element is hidden - for the elements that are mere affordances of the hotkey, ex. a toolbar that fades out.
