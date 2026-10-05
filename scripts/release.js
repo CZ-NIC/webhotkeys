@@ -28,6 +28,24 @@ if (git('rev-parse', 'HEAD') !== git('rev-parse', 'origin/main')) {
     die('main and origin/main differ - pull or push first, so the tag lands on the pushed commit')
 }
 
+// 1b. ...and only once CI has passed on it - waiting for a run still in progress - so that no version
+//     goes out to be followed by a "CI failed" mail. release.yml runs the suite once more on the tag.
+const head = git('rev-parse', 'HEAD')
+const gh = (...args) => execFileSync('gh', args, { cwd: root, encoding: 'utf8' })
+const [run] = JSON.parse(gh('run', 'list', '--workflow', 'ci.yml', '--commit', head, '--limit', '1',
+    '--json', 'databaseId,status,conclusion,url'))
+if (!run) die(`no CI run for ${head.slice(0, 7)} yet - GitHub may not have started it, try again in a moment`)
+if (run.status !== 'completed') {
+    console.log(`release: waiting for CI on ${head.slice(0, 7)} ${run.url}`)
+    try {
+        execFileSync('gh', ['run', 'watch', String(run.databaseId), '--exit-status', '--compact'], { cwd: root, stdio: 'inherit' })
+    } catch {
+        die(`CI failed, nothing released: ${run.url}`)
+    }
+} else if (run.conclusion !== 'success') {
+    die(`CI on ${head.slice(0, 7)} ended with "${run.conclusion}", nothing released: ${run.url}`)
+}
+
 // 2. The CHANGELOG entry is the one thing written by hand, so it is also what names the version.
 const first = fs.readFileSync(path.join(root, 'CHANGELOG.md'), 'utf8').split('\n').find(l => l.startsWith('# '))
 const match = /^# ([0-9]+\.[0-9]+\.[0-9]+) \(unreleased\)$/.exec(first || '')

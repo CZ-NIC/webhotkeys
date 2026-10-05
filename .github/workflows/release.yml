@@ -12,7 +12,12 @@ permissions:
   id-token: write # npm Trusted Publishing (OIDC) - no NPM_TOKEN secret needed
 
 jobs:
+  # The full CI (lint, all Node versions, the minified build, the README hash) - nothing is published unless it passes.
+  ci:
+    uses: ./.github/workflows/ci.yml
+
   publish:
+    needs: ci
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -25,9 +30,7 @@ jobs:
       - run: npm install -g npm@latest
 
       - run: npm ci
-      - run: npm test
-      - run: npm run build # dist/ is gitignored, test:min needs it built first
-      - run: npm run test:min
+      - run: npm run build # dist/ is gitignored; the GitHub release attaches it
 
       - name: The tag must match the version in package.json
         run: |
