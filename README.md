@@ -3,8 +3,8 @@
 Easy solution to integrate keyboard hotkeys into the webpage.
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/webhotkeys@1.1.0/dist/WebHotkeys.min.js"
-        integrity="sha384-b/MTmeymj5zGJ0VKv0EJK1hSNdlPyxRNRniqSp97iYYbsIjyNeCSrRVYLFMIE8cL"
+<script src="https://cdn.jsdelivr.net/npm/webhotkeys@1.1.1/dist/WebHotkeys.min.js"
+        integrity="sha384-GSvmX7qIMnxd5kgPsLoA3YzwUaZQcKBmCh66PVPZNibhc4VRxD+6h61FyJd3/gD9"
         crossorigin="anonymous" data-register></script>
 ```
 

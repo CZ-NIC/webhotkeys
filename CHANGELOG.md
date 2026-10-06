@@ -1,4 +1,4 @@
-# 1.1.1 (unreleased)
+# 1.1.1 (2026-10-06)
 fix: `grid()` lost its place when the focus was on an element inside a cell (a checkbox, a slider): an arrow pressed there jumped to the very first cell. With the default `current: ':focus'`, the cell holding the focus counts as the current one.
 fix: a focused range input (slider) keeps Left/Right/Home/End to move its thumb - a grid or any other arrow hotkey used to take them. Up/Down stay hotkeys, so a grid can still leave the cell.
 
